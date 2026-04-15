@@ -9,28 +9,40 @@
 </div>
 
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card">
             <div class="stat-number">{{ project_count }}</div>
             <div class="stat-label">项目总数</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card">
             <div class="stat-number">{{ module_count }}</div>
             <div class="stat-label">模块总数</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card">
             <div class="stat-number">{{ config_count }}</div>
             <div class="stat-label">配置总数</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card">
             <div class="stat-number">{{ testcase_count }}</div>
             <div class="stat-label">用例总数</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="stat-number">{{ scene_count }}</div>
+            <div class="stat-label">场景总数</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="stat-number">{{ ddt_count }}</div>
+            <div class="stat-label">数据源</div>
         </div>
     </div>
 </div>
@@ -46,6 +58,7 @@
                     <a href="{% url 'config_create' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-lg"></i> 新增配置</a>
                     <a href="{% url 'testcase_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-lg"></i> 新增用例</a>
                     <a href="{% url 'ddt_create' %}" class="btn btn-outline-info"><i class="bi bi-plus-lg"></i> 新增数据源</a>
+                    <a href="{% url 'scene_create' %}" class="btn btn-outline-dark"><i class="bi bi-plus-lg"></i> 新增场景</a>
                 </div>
             </div>
         </div>

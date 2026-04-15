@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% load api_extras %}
+
+{% block title %}场景编排 - {{ scene.name }} - Pytest 测试平台{% endblock %}
+{% block nav_scene %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col">
+        <h4>
+            <i class="bi bi-diagram-2"></i> 场景编排
+            <small class="text-muted ms-2">{{ scene.name }}</small>
+        </h4>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'scene_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> 返回列表
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 左侧：用例编排区 -->
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-ol"></i> 执行用例（拖拽排序）</span>
+                <span class="badge bg-secondary" id="case-count">{{ scene_cases|length }} 个用例</span>
+            </div>
+            <div class="card-body p-0">
+                <div id="case-list" data-scene-id="{{ scene.pk }}">
+                    {% for sc in scene_cases %}
+                    <div class="d-flex align-items-center border-bottom p-2 scene-case-item"
+                         draggable="true"
+                         data-case-id="{{ sc.pk }}"
+                         data-order="{{ sc.order_index }}">
+                        <span class="badge bg-secondary me-2 order-badge">{{ sc.order_index }}</span>
+                        <i class="bi bi-grip-vertical text-muted me-2" style="cursor:grab;"></i>
+                        <span class="badge {% if sc.testcase.method == 'GET' %}bg-success{% elif sc.testcase.method == 'POST' %}bg-primary{% elif sc.testcase.method == 'PUT' %}bg-warning{% elif sc.testcase.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %} me-2">
+                            {{ sc.testcase.method }}
+                        </span>
+                        <span class="me-2">{{ sc.testcase.name }}</span>
+                        <small class="text-muted me-2">{{ sc.testcase.module.name }}</small>
+                        {% if sc.testcase.extractors and sc.testcase.extractors|lookup:"0" %}
+                        <span class="badge bg-info me-2"><i class="bi bi-link-45deg"></i> 提取</span>
+                        {% endif %}
+                        <div class="ms-auto">
+                            <button class="btn btn-sm btn-outline-danger btn-remove-case" data-case-id="{{ sc.pk }}" title="移除">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4" id="empty-hint">
+                        <i class="bi bi-inbox" style="font-size:2rem;"></i>
+                        <p class="mb-0 mt-2">暂无用例，请从右侧添加</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 执行链路图 -->
+        <div class="card">
+            <div class="card-header"><i class="bi bi-share"></i> 执行链路</div>
+            <div class="card-body" id="chain-view">
+                {% for sc in scene_cases %}
+                <span class="badge {% if sc.testcase.method == 'GET' %}bg-success{% elif sc.testcase.method == 'POST' %}bg-primary{% elif sc.testcase.method == 'PUT' %}bg-warning{% elif sc.testcase.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %} chain-node">
+                    {{ sc.testcase.name }}
+                </span>
+                {% if not forloop.last %}
+                <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                {% endif %}
+                {% empty %}
+                <span class="text-muted">暂无执行链路</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧：添加用例 & 场景信息 -->
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-plus-circle"></i> 添加用例</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <select class="form-select form-select-sm" id="filter-project">
+                        <option value="">全部项目</option>
+                        {% for p in projects %}
+                        <option value="{{ p.pk }}">{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <input type="text" class="form-control form-control-sm" id="search-testcase" placeholder="搜索用例名称...">
+                </div>
+                <div id="available-testcases" style="max-height:320px;overflow-y:auto;">
+                    {% for tc in available_testcases %}
+                    <div class="d-flex align-items-center border-bottom py-1 available-tc-item" data-tc-id="{{ tc.pk }}" data-project-id="{{ tc.module.project.pk }}">
+                        <span class="badge {% if tc.method == 'GET' %}bg-success{% elif tc.method == 'POST' %}bg-primary{% elif tc.method == 'PUT' %}bg-warning{% elif tc.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %} me-1" style="font-size:0.7rem;">{{ tc.method }}</span>
+                        <small class="me-1 text-truncate" style="max-width:140px;">{{ tc.name }}</small>
+                        <small class="text-muted me-1">{{ tc.module.name }}</small>
+                        <button class="btn btn-sm btn-outline-primary btn-add-case ms-auto py-0" data-tc-id="{{ tc.pk }}" title="添加">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">无可添加用例</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-info-circle"></i> 场景信息</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr><td class="text-muted">项目</td><td>{{ scene.project.name }}</td></tr>
+                    <tr><td class="text-muted">名称</td><td>{{ scene.name }}</td></tr>
+                    <tr><td class="text-muted">描述</td><td>{{ scene.description|default:"-" }}</td></tr>
+                    <tr><td class="text-muted">创建人</td><td>{{ scene.created_by|default:"-" }}</td></tr>
+                </table>
+                <div class="mt-2">
+                    <a href="{% url 'scene_update' scene.pk %}" class="btn btn-sm btn-outline-secondary w-100">
+                        <i class="bi bi-pencil"></i> 编辑基本信息
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var sceneId = {{ scene.pk }};
+    var dragSrcEl = null;
+
+    // --- Drag and Drop Reorder ---
+    var caseList = document.getElementById("case-list");
+
+    function handleDragStart(e) {
+        dragSrcEl = this;
+        this.style.opacity = "0.4";
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", this.dataset.caseId);
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        this.classList.add("bg-light");
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove("bg-light");
+    }
+
+    function handleDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.classList.remove("bg-light");
+        if (dragSrcEl !== this) {
+            // Swap DOM positions
+            var allItems = Array.from(caseList.querySelectorAll(".scene-case-item"));
+            var fromIdx = allItems.indexOf(dragSrcEl);
+            var toIdx = allItems.indexOf(this);
+            if (fromIdx < toIdx) {
+                this.parentNode.insertBefore(dragSrcEl, this.nextSibling);
+            } else {
+                this.parentNode.insertBefore(dragSrcEl, this);
+            }
+            // Recalculate order and save
+            saveOrder();
+        }
+        return false;
+    }
+
+    function handleDragEnd(e) {
+        this.style.opacity = "1";
+        caseList.querySelectorAll(".scene-case-item").forEach(function(item) {
+            item.classList.remove("bg-light");
+        });
+    }
+
+    function bindDragEvents() {
+        caseList.querySelectorAll(".scene-case-item").forEach(function(item) {
+            item.addEventListener("dragstart", handleDragStart);
+            item.addEventListener("dragover", handleDragOver);
+            item.addEventListener("dragenter", handleDragEnter);
+            item.addEventListener("dragleave", handleDragLeave);
+            item.addEventListener("drop", handleDrop);
+            item.addEventListener("dragend", handleDragEnd);
+        });
+    }
+
+    function saveOrder() {
+        var items = caseList.querySelectorAll(".scene-case-item");
+        var orderData = [];
+        items.forEach(function(item, idx) {
+            item.querySelector(".order-badge").textContent = idx + 1;
+            orderData.push({id: parseInt(item.dataset.caseId), order: idx + 1});
+        });
+        // Update chain view
+        updateChainView();
+        // Save to server
+        fetch("/scenes/" + sceneId + "/reorder/", {
+            method: "POST",
+            headers: {"X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/x-www-form-urlencoded"},
+            body: "order=" + encodeURIComponent(JSON.stringify(orderData))
+        });
+    }
+
+    // --- Remove Case ---
+    caseList.addEventListener("click", function(e) {
+        var btn = e.target.closest(".btn-remove-case");
+        if (!btn) return;
+        var caseId = btn.dataset.caseId;
+        if (!confirm("确认移除该用例？")) return;
+        fetch("/scenes/" + sceneId + "/cases/" + caseId + "/remove/", {
+            method: "POST",
+            headers: {"X-CSRFToken": getCookie("csrftoken")}
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok) {
+                var item = caseList.querySelector('[data-case-id="' + caseId + '"]');
+                if (item) item.remove();
+                updateCaseCount();
+                updateChainView();
+                checkEmpty();
+            }
+        });
+    });
+
+    // --- Add Case ---
+    document.getElementById("available-testcases").addEventListener("click", function(e) {
+        var btn = e.target.closest(".btn-add-case");
+        if (!btn) return;
+        var tcId = btn.dataset.tcId;
+        fetch("/scenes/" + sceneId + "/add-case/", {
+            method: "POST",
+            headers: {"X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/x-www-form-urlencoded"},
+            body: "testcase_id=" + tcId
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok) {
+                var availItem = btn.closest(".available-tc-item");
+                if (availItem) availItem.remove();
+                // Reload page to reflect changes
+                location.reload();
+            } else {
+                alert(data.error || "添加失败");
+            }
+        });
+    });
+
+    // --- Filter Available Testcases ---
+    var filterProject = document.getElementById("filter-project");
+    var searchInput = document.getElementById("search-testcase");
+
+    function filterAvailable() {
+        var projId = filterProject ? filterProject.value : "";
+        var search = searchInput ? searchInput.value.toLowerCase() : "";
+        document.querySelectorAll(".available-tc-item").forEach(function(item) {
+            var matchProj = !projId || item.dataset.projectId === projId;
+            var tcName = item.querySelector("small").textContent.toLowerCase();
+            var matchSearch = !search || tcName.indexOf(search) >= 0;
+            item.style.display = (matchProj && matchSearch) ? "" : "none";
+        });
+    }
+
+    if (filterProject) filterProject.addEventListener("change", filterAvailable);
+    if (searchInput) searchInput.addEventListener("input", filterAvailable);
+
+    // --- Helpers ---
+    function updateCaseCount() {
+        var count = caseList.querySelectorAll(".scene-case-item").length;
+        document.getElementById("case-count").textContent = count + " 个用例";
+    }
+
+    function checkEmpty() {
+        var hint = document.getElementById("empty-hint");
+        var items = caseList.querySelectorAll(".scene-case-item");
+        if (items.length === 0 && !hint) {
+            caseList.innerHTML = '<div class="text-center text-muted py-4" id="empty-hint"><i class="bi bi-inbox" style="font-size:2rem;"></i><p class="mb-0 mt-2">暂无用例，请从右侧添加</p></div>';
+        }
+    }
+
+    function updateChainView() {
+        var items = caseList.querySelectorAll(".scene-case-item");
+        var chainEl = document.getElementById("chain-view");
+        if (items.length === 0) {
+            chainEl.innerHTML = '<span class="text-muted">暂无执行链路</span>';
+            return;
+        }
+        var html = "";
+        items.forEach(function(item, idx) {
+            var name = item.querySelector("span.me-2:nth-child(4)") ?
+                item.querySelectorAll("span")[3].textContent.trim() : "";
+            var methodBadge = item.querySelector(".badge.bg-success, .badge.bg-primary, .badge.bg-warning, .badge.bg-danger, .badge.bg-info");
+            var method = methodBadge ? methodBadge.textContent.trim() : "";
+            var cls = "bg-info";
+            if (method === "GET") cls = "bg-success";
+            else if (method === "POST") cls = "bg-primary";
+            else if (method === "PUT") cls = "bg-warning";
+            else if (method === "DELETE") cls = "bg-danger";
+            html += '<span class="badge ' + cls + ' chain-node">' + name + '</span>';
+            if (idx < items.length - 1) {
+                html += ' <i class="bi bi-arrow-right mx-1 text-muted"></i> ';
+            }
+        });
+        chainEl.innerHTML = html;
+    }
+
+    // Init
+    bindDragEvents();
+})();
+</script>
+{% endblock %}

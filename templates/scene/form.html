@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{% if scene %}编辑场景{% else %}新增场景{% endif %} - Pytest 测试平台{% endblock %}
+{% block nav_scene %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col"><h4><i class="bi bi-diagram-2"></i> {% if scene %}编辑场景{% else %}新增场景{% endif %}</h4></div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">所属项目 <span class="text-danger">*</span></label>
+                <select class="form-select" name="project" required>
+                    <option value="">请选择项目</option>
+                    {% for p in projects %}
+                    <option value="{{ p.pk }}" {% if form_data and form_data.project == p.pk|stringformat:"s" %}selected{% elif scene and scene.project.pk == p.pk %}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">场景名称 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="name"
+                       value="{% if form_data %}{{ form_data.name }}{% elif scene %}{{ scene.name }}{% endif %}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">场景描述</label>
+                <textarea class="form-control" name="description" rows="3">{% if form_data %}{{ form_data.description }}{% elif scene %}{{ scene.description }}{% endif %}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">创建人</label>
+                <input type="text" class="form-control" name="created_by"
+                       value="{% if form_data %}{{ form_data.created_by }}{% elif scene %}{{ scene.created_by }}{% endif %}">
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+                <a href="{% url 'scene_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

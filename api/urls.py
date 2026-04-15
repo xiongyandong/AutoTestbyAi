@@ -5,6 +5,7 @@ from .views import module as module_views
 from .views import config as config_views
 from .views import testcase as testcase_views
 from .views import ddt as ddt_views
+from .views import scene as scene_views
 
 urlpatterns = [
     # Dashboard
@@ -42,4 +43,15 @@ urlpatterns = [
     path('ddt/<int:pk>/delete/', ddt_views.ddt_delete, name='ddt_delete'),
     path('ddt/<int:pk>/preview/', ddt_views.ddt_preview, name='ddt_preview'),
     path('ddt/api/list/', ddt_views.ddt_list_api, name='ddt_list_api'),
+
+    # 场景编排
+    path('scenes/', scene_views.scene_list, name='scene_list'),
+    path('scenes/create/', scene_views.scene_create, name='scene_create'),
+    path('scenes/<int:pk>/update/', scene_views.scene_update, name='scene_update'),
+    path('scenes/<int:pk>/delete/', scene_views.scene_delete, name='scene_delete'),
+    path('scenes/<int:pk>/orchestrate/', scene_views.scene_orchestrate, name='scene_orchestrate'),
+    path('scenes/<int:pk>/add-case/', scene_views.scene_add_case, name='scene_add_case'),
+    path('scenes/<int:pk>/remove-case/<int:case_pk>/', scene_views.scene_remove_case, name='scene_remove_case'),
+    path('scenes/<int:pk>/reorder/', scene_views.scene_reorder, name='scene_reorder'),
+    path('scenes/api/testcases/', scene_views.scene_testcases_api, name='scene_testcases_api'),
 ]
