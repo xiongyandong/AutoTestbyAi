@@ -4,8 +4,6 @@ from .views import project as project_views
 from .views import module as module_views
 from .views import config as config_views
 
-app_name = 'api'
-
 urlpatterns = [
     # Dashboard
     path('', dashboard_views.dashboard, name='dashboard'),
