@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{% if config %}编辑配置{% else %}新增配置{% endif %} - Pytest 测试平台{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col"><h4><i class="bi bi-gear"></i> {% if config %}编辑配置{% else %}新增配置{% endif %}</h4></div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="config-form">
+            {% csrf_token %}
+
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic" type="button">基本信息</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#vars" type="button">全局变量</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#hooks" type="button">Hooks</button></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="basic">
+                    <div class="mb-3">
+                        <label for="project-select" class="form-label">所属项目 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="project-select">
+                            <option value="">请选择项目</option>
+                            {% for p in projects %}
+                            <option value="{{ p.pk }}" {% if config and config.module.project.pk == p.pk %}selected{% elif form_data and form_data.project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="module" class="form-label">所属模块 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="module" name="module" required>
+                            <option value="">请先选择项目</option>
+                            {% for m in modules %}
+                            <option value="{{ m.pk }}" data-project="{{ m.project.pk }}" {% if config and config.module.pk == m.pk %}selected{% elif form_data and form_data.module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">配置名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name"
+                               value="{% if form_data %}{{ form_data.name }}{% elif config %}{{ config.name }}{% endif %}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="env_type" class="form-label">环境类型</label>
+                        <select class="form-select" id="env_type" name="env_type">
+                            <option value="DEV" {% if config and config.env_type == 'DEV' %}selected{% elif form_data and form_data.env_type == 'DEV' %}selected{% endif %}>开发环境</option>
+                            <option value="QA" {% if config and config.env_type == 'QA' %}selected{% elif form_data and form_data.env_type == 'QA' %}selected{% endif %}>测试环境</option>
+                            <option value="PROD" {% if config and config.env_type == 'PROD' %}selected{% elif form_data and form_data.env_type == 'PROD' %}selected{% endif %}>生产环境</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="created_by" class="form-label">创建人</label>
+                        <input type="text" class="form-control" id="created_by" name="created_by"
+                               value="{% if form_data %}{{ form_data.created_by }}{% elif config %}{{ config.created_by }}{% endif %}">
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="vars">
+                    <div class="mb-3">
+                        <label for="variables" class="form-label">全局变量 (JSON)</label>
+                        <textarea class="form-control font-monospace" id="variables" name="variables" rows="8">{% if form_data %}{{ form_data.variables }}{% elif config %}{{ config.variables|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <small class="text-muted">例: {"base_url": "http://api.example.com", "timeout": 30}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="parameters" class="form-label">公共请求参数 (JSON)</label>
+                        <textarea class="form-control font-monospace" id="parameters" name="parameters" rows="8">{% if form_data %}{{ form_data.parameters }}{% elif config %}{{ config.parameters|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <small class="text-muted">例: {"headers": {"Content-Type": "application/json"}}</small>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="hooks">
+                    <div class="mb-3">
+                        <label for="request_hooks" class="form-label">请求 Hooks (JSON)</label>
+                        <textarea class="form-control font-monospace" id="request_hooks" name="request_hooks" rows="8">{% if form_data %}{{ form_data.request_hooks }}{% elif config %}{{ config.request_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <small class="text-muted">例: {"setup": ["hook.add_token(request)"]}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="response_hooks" class="form-label">响应 Hooks (JSON)</label>
+                        <textarea class="form-control font-monospace" id="response_hooks" name="response_hooks" rows="8">{% if form_data %}{{ form_data.response_hooks }}{% elif config %}{{ config.response_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <small class="text-muted">例: {"teardown": ["hook.log_response(response)"]}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+                <a href="{% url 'config_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$('#project-select').change(function() {
+    var projectId = $(this).val();
+    var moduleSelect = $('#module');
+    moduleSelect.empty().append('<option value="">请选择模块</option>');
+    if (projectId) {
+        $.get('{% url "load_modules" %}', {project_id: projectId}, function(data) {
+            data.forEach(function(m) {
+                moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>');
+            });
+        });
+    }
+});
+
+$('#config-form').submit(function() {
+    ['variables', 'parameters', 'request_hooks', 'response_hooks'].forEach(function(field) {
+        var el = $('#' + field);
+        try {
+            var parsed = JSON.parse(el.val());
+            el.val(JSON.stringify(parsed, null, 2));
+        } catch(e) {}
+    });
+});
+</script>
+{% endblock %}
