@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, Module, Config, TestCase, DDTSource, Scene, SceneCase
+from .models import Project, Module, Config, TestCase, DDTSource, Scene, SceneCase, Task, TaskResult
 
 
 @admin.register(Project)
@@ -47,3 +47,16 @@ class SceneAdmin(admin.ModelAdmin):
 class SceneCaseAdmin(admin.ModelAdmin):
     list_display = ['scene', 'testcase', 'order_index']
     list_filter = ['scene__project']
+
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ['task_name', 'task_type', 'status', 'scope', 'execute_env', 'created_by', 'created_at']
+    list_filter = ['task_type', 'status', 'scope', 'execute_env']
+    search_fields = ['task_name']
+
+
+@admin.register(TaskResult)
+class TaskResultAdmin(admin.ModelAdmin):
+    list_display = ['task', 'total_cases', 'passed', 'failed', 'error', 'duration', 'executed_at']
+    list_filter = ['task__status']

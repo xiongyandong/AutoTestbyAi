@@ -151,3 +151,71 @@ class SceneCase(models.Model):
 
     def __str__(self):
         return f'{self.scene.name} -> {self.testcase.name} (#{self.order_index})'
+
+
+class Task(models.Model):
+    TASK_TYPE_CHOICES = [
+        ('SYNC', '同步执行'),
+        ('ASYNC', '异步执行'),
+        ('SCHEDULE', '定时任务'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', '待执行'),
+        ('RUNNING', '执行中'),
+        ('COMPLETED', '已完成'),
+        ('FAILED', '执行失败'),
+    ]
+    SCOPE_CHOICES = [
+        ('TESTCASE', '单用例'),
+        ('MODULE', '模块'),
+        ('PROJECT', '项目'),
+        ('SCENE', '场景'),
+    ]
+    ENV_CHOICES = Config.ENV_CHOICES
+
+    task_name = models.CharField('任务名称', max_length=200)
+    task_type = models.CharField('执行类型', max_length=10, choices=TASK_TYPE_CHOICES, default='SYNC')
+    status = models.CharField('状态', max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    scope = models.CharField('执行范围', max_length=10, choices=SCOPE_CHOICES, default='TESTCASE')
+    # 执行范围关联
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, verbose_name='项目', null=True, blank=True, related_name='tasks')
+    module = models.ForeignKey(Module, on_delete=models.SET_NULL, verbose_name='模块', null=True, blank=True, related_name='tasks')
+    testcase = models.ForeignKey(TestCase, on_delete=models.SET_NULL, verbose_name='用例', null=True, blank=True, related_name='tasks')
+    scene = models.ForeignKey(Scene, on_delete=models.SET_NULL, verbose_name='场景', null=True, blank=True, related_name='tasks')
+    # 执行配置
+    execute_env = models.CharField('执行环境', max_length=10, choices=ENV_CHOICES, default='DEV')
+    cron_expression = models.CharField('Cron表达式', max_length=100, blank=True, default='')
+    email_notify = models.BooleanField('邮件通知', default=False)
+    report_name = models.CharField('报告名称', max_length=200, blank=True, default='')
+    created_by = models.CharField('创建人', max_length=50, blank=True, default='')
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = '测试任务'
+        verbose_name_plural = verbose_name
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.task_name
+
+
+class TaskResult(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, verbose_name='所属任务', related_name='results')
+    total_cases = models.IntegerField('总用例数', default=0)
+    passed = models.IntegerField('通过数', default=0)
+    failed = models.IntegerField('失败数', default=0)
+    error = models.IntegerField('错误数', default=0)
+    skipped = models.IntegerField('跳过数', default=0)
+    duration = models.FloatField('执行耗时(秒)', default=0)
+    report_path = models.CharField('报告路径', max_length=500, blank=True, default='')
+    log = models.TextField('执行日志', blank=True, default='')
+    executed_at = models.DateTimeField('执行时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '任务结果'
+        verbose_name_plural = verbose_name
+        ordering = ['-executed_at']
+
+    def __str__(self):
+        return f'{self.task.task_name} - {self.executed_at.strftime("%Y-%m-%d %H:%M")}'
