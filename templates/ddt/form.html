@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{% if source %}编辑数据源{% else %}新增数据源{% endif %} - Pytest 测试平台{% endblock %}
+{% block nav_ddt %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col"><h4><i class="bi bi-database"></i> {% if source %}编辑数据源{% else %}新增数据源{% endif %}</h4></div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="ddt-form">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">数据源名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name"
+                               value="{% if form_data %}{{ form_data.name }}{% elif source %}{{ source.name }}{% endif %}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">数据源类型</label>
+                        <select class="form-select" name="source_type" id="source-type">
+                            <option value="JSON" {% if source and source.source_type == 'JSON' %}selected{% elif form_data and form_data.source_type == 'JSON' %}selected{% endif %}>JSON</option>
+                            <option value="YAML" {% if source and source.source_type == 'YAML' %}selected{% elif form_data and form_data.source_type == 'YAML' %}selected{% endif %}>YAML</option>
+                            <option value="CSV" {% if source and source.source_type == 'CSV' %}selected{% elif form_data and form_data.source_type == 'CSV' %}selected{% endif %}>CSV</option>
+                            <option value="DB" {% if source and source.source_type == 'DB' %}selected{% elif form_data and form_data.source_type == 'DB' %}selected{% endif %}>数据库</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" name="description" rows="2">{% if form_data %}{{ form_data.description }}{% elif source %}{{ source.description }}{% endif %}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3" id="file-path-group">
+                        <label class="form-label">文件路径</label>
+                        <input type="text" class="form-control" name="file_path" placeholder="data/login_test.json"
+                               value="{% if form_data %}{{ form_data.file_path }}{% elif source %}{{ source.file_path }}{% endif %}">
+                        <small class="text-muted">JSON/YAML/CSV 文件相对于项目根目录的路径</small>
+                    </div>
+                    <div class="mb-3" id="db-query-group" style="display:none">
+                        <label class="form-label">SQL 查询语句</label>
+                        <textarea class="form-control font-monospace" name="db_query" rows="4"
+                                  placeholder="SELECT username, password FROM test_users">{% if form_data %}{{ form_data.db_query }}{% elif source %}{{ source.db_query }}{% endif %}</textarea>
+                        <small class="text-muted">仅数据库类型使用，查询结果列名将作为参数名</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3" id="content-group">
+                <label class="form-label">数据内容</label>
+                <textarea class="form-control font-monospace" name="content" rows="12" id="content-editor">{% if form_data %}{{ form_data.content }}{% elif source %}{{ source.content }}{% else %}[
+  {"username": "admin", "password": "123456"},
+  {"username": "user1", "password": "pass1"}
+]{% endif %}</textarea>
+                <small class="text-muted" id="content-hint">JSON 数组格式，每个对象为一组测试参数</small>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+                <a href="{% url 'ddt_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFields() {
+    var type = $('#source-type').val();
+    if (type === 'DB') {
+        $('#file-path-group').hide();
+        $('#db-query-group').show();
+        $('#content-group').hide();
+        $('[name="file_path"]').val('');
+        $('[name="content"]').val('');
+    } else {
+        $('#file-path-group').show();
+        $('#db-query-group').hide();
+        $('#content-group').show();
+        $('[name="db_query"]').val('');
+    }
+    if (type === 'JSON') {
+        $('#content-hint').text('JSON 数组格式，每个对象为一组测试参数');
+    } else if (type === 'YAML') {
+        $('#content-hint').text('YAML 列表格式，每个元素为一组测试参数');
+    } else if (type === 'CSV') {
+        $('#content-hint').text('CSV 格式，首行为列名，后续每行一组参数');
+    }
+}
+$('#source-type').change(toggleFields);
+toggleFields();
+</script>
+{% endblock %}

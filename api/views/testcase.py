@@ -2,7 +2,7 @@ import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
-from ..models import TestCase, Module, Project
+from ..models import TestCase, Module, Project, DDTSource
 
 
 def _get_filter_context(request):
@@ -64,6 +64,8 @@ def _validate_and_save(testcase, request, is_create=False):
     setup_hooks = request.POST.get('setup_hooks', '[]')
     teardown_hooks = request.POST.get('teardown_hooks', '[]')
 
+    ddt_source_id = request.POST.get('ddt_source', '')
+
     form_data = request.POST.copy()
     form_data['is_parameterized'] = is_parameterized
 
@@ -97,6 +99,7 @@ def _validate_and_save(testcase, request, is_create=False):
     testcase.url = url
     testcase.created_by = created_by
     testcase.is_parameterized = is_parameterized
+    testcase.ddt_source_id = ddt_source_id if ddt_source_id else None
     testcase.headers = parsed['headers']
     testcase.params = parsed['params']
     testcase.body = parsed['body']
@@ -115,7 +118,8 @@ def testcase_create(request):
     """创建用例"""
     projects = Project.objects.all()
     modules = Module.objects.select_related('project').all()
-    ctx = {'projects': projects, 'modules': modules, 'method_choices': METHOD_CHOICES, 'nav_testcase': 'active'}
+    ddt_sources = DDTSource.objects.all()
+    ctx = {'projects': projects, 'modules': modules, 'method_choices': METHOD_CHOICES, 'ddt_sources': ddt_sources, 'nav_testcase': 'active'}
 
     if request.method == 'POST':
         tc = TestCase()
@@ -134,7 +138,8 @@ def testcase_update(request, pk):
     testcase = get_object_or_404(TestCase, pk=pk)
     projects = Project.objects.all()
     modules = Module.objects.select_related('project').all()
-    ctx = {'testcase': testcase, 'projects': projects, 'modules': modules, 'method_choices': METHOD_CHOICES, 'nav_testcase': 'active'}
+    ddt_sources = DDTSource.objects.all()
+    ctx = {'testcase': testcase, 'projects': projects, 'modules': modules, 'method_choices': METHOD_CHOICES, 'ddt_sources': ddt_sources, 'nav_testcase': 'active'}
 
     if request.method == 'POST':
         success, form_data = _validate_and_save(testcase, request)

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}DDT 数据源 - Pytest 测试平台{% endblock %}
+{% block nav_ddt %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col"><h4><i class="bi bi-database"></i> DDT 数据源管理</h4></div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span>数据源列表</span>
+        <div class="d-flex gap-2 flex-wrap">
+            <form method="get" class="d-flex gap-1">
+                <select name="source_type" class="form-select form-select-sm" style="width:auto">
+                    <option value="">全部类型</option>
+                    <option value="JSON" {% if current_type == 'JSON' %}selected{% endif %}>JSON</option>
+                    <option value="YAML" {% if current_type == 'YAML' %}selected{% endif %}>YAML</option>
+                    <option value="CSV" {% if current_type == 'CSV' %}selected{% endif %}>CSV</option>
+                    <option value="DB" {% if current_type == 'DB' %}selected{% endif %}>数据库</option>
+                </select>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="搜索..." value="{{ search }}" style="width:120px">
+                <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button>
+            </form>
+            <a href="{% url 'ddt_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增数据源</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover table-striped mb-0">
+            <thead>
+                <tr>
+                    <th width="5%">#</th>
+                    <th width="20%">名称</th>
+                    <th width="10%">类型</th>
+                    <th width="30%">描述</th>
+                    <th width="10%">关联用例</th>
+                    <th width="12%">更新时间</th>
+                    <th width="13%">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for src in sources %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ src.name }}</td>
+                    <td><span class="badge {% if src.source_type == 'JSON' %}bg-success{% elif src.source_type == 'YAML' %}bg-info{% elif src.source_type == 'CSV' %}bg-warning{% else %}bg-secondary{% endif %}">{{ src.source_type }}</span></td>
+                    <td>{{ src.description|default:"-"|truncatechars:40 }}</td>
+                    <td>{{ src.testcases.count }}</td>
+                    <td>{{ src.updated_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{% url 'ddt_preview' src.pk %}" class="btn btn-sm btn-outline-info" title="预览"><i class="bi bi-eye"></i></a>
+                            <a href="{% url 'ddt_update' src.pk %}" class="btn btn-sm btn-outline-primary" title="编辑"><i class="bi bi-pencil"></i></a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="删除"
+                                    onclick="confirmDelete('{% url 'ddt_delete' src.pk %}', '{{ src.name }}')"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-4">暂无数据源，点击上方按钮新增</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

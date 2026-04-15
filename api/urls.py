@@ -4,6 +4,7 @@ from .views import project as project_views
 from .views import module as module_views
 from .views import config as config_views
 from .views import testcase as testcase_views
+from .views import ddt as ddt_views
 
 urlpatterns = [
     # Dashboard
@@ -33,4 +34,12 @@ urlpatterns = [
     path('testcases/create/', testcase_views.testcase_create, name='testcase_create'),
     path('testcases/<int:pk>/update/', testcase_views.testcase_update, name='testcase_update'),
     path('testcases/<int:pk>/delete/', testcase_views.testcase_delete, name='testcase_delete'),
+
+    # DDT 数据源
+    path('ddt/', ddt_views.ddt_list, name='ddt_list'),
+    path('ddt/create/', ddt_views.ddt_create, name='ddt_create'),
+    path('ddt/<int:pk>/update/', ddt_views.ddt_update, name='ddt_update'),
+    path('ddt/<int:pk>/delete/', ddt_views.ddt_delete, name='ddt_delete'),
+    path('ddt/<int:pk>/preview/', ddt_views.ddt_preview, name='ddt_preview'),
+    path('ddt/api/list/', ddt_views.ddt_list_api, name='ddt_list_api'),
 ]

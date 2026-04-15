@@ -151,9 +151,30 @@
                                    {% if form_data and form_data.is_parameterized %}checked{% elif testcase and testcase.is_parameterized %}checked{% endif %}>
                             <label class="form-check-label" for="is_parameterized">启用参数化</label>
                         </div>
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> 启用参数化后，该用例将基于数据源自动生成多条测试用例执行。DDT 数据源管理将在后续版本提供。
-                        </div>
+                    </div>
+                    <div class="mb-3" id="ddt-source-group">
+                        <label class="form-label">关联数据源</label>
+                        <select class="form-select" name="ddt_source" id="ddt-source-select">
+                            <option value="">不关联数据源</option>
+                            {% for src in ddt_sources %}
+                            <option value="{{ src.pk }}"
+                                    {% if testcase and testcase.ddt_source.pk == src.pk %}selected{% elif form_data and form_data.ddt_source == src.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ src.name }} ({{ src.source_type }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">启用参数化后，选择一个数据源，用例将基于数据自动展开多组执行</small>
+                    </div>
+                    {% if testcase and testcase.ddt_source %}
+                    <div class="mb-3">
+                        <a href="{% url 'ddt_preview' testcase.ddt_source.pk %}" class="btn btn-sm btn-outline-info" target="_blank">
+                            <i class="bi bi-eye"></i> 预览当前数据源
+                        </a>
+                    </div>
+                    {% endif %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 参数化用例执行时，pytest 将为数据源中的每组数据生成一条独立的测试用例。<br>
+                        例如：数据源有 3 组登录数据，则生成 test_login[case0]、test_login[case1]、test_login[case2] 三条用例。
                     </div>
                 </div>
             </div>
@@ -187,6 +208,16 @@ $('#project-select').change(function() {
 $('#method-select').change(function() {
     $('#method-badge').text($(this).val());
 });
+
+// 参数化开关联动
+$('#is_parameterized').change(function() {
+    if ($(this).is(':checked')) {
+        $('#ddt-source-group').show();
+    } else {
+        $('#ddt-source-group').hide();
+        $('#ddt-source-select').val('');
+    }
+}).trigger('change');
 
 // 提交前格式化 JSON
 $('#testcase-form').submit(function() {
