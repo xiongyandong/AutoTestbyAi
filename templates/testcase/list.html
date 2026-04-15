@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}用例管理 - Pytest 测试平台{% endblock %}
+{% block nav_testcase %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col"><h4><i class="bi bi-list-check"></i> 用例管理</h4></div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span>用例列表</span>
+        <div class="d-flex gap-2 flex-wrap">
+            <form method="get" class="d-flex gap-1">
+                <select name="project" class="form-select form-select-sm" id="filter-project" style="width:auto">
+                    <option value="">全部项目</option>
+                    {% for p in projects %}
+                    <option value="{{ p.pk }}" {% if current_project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+                <select name="module" class="form-select form-select-sm" id="filter-module" style="width:auto">
+                    <option value="">全部模块</option>
+                    {% for m in modules %}
+                    <option value="{{ m.pk }}" {% if current_module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
+                    {% endfor %}
+                </select>
+                <select name="method" class="form-select form-select-sm" style="width:auto">
+                    <option value="">全部方法</option>
+                    <option value="GET" {% if current_method == 'GET' %}selected{% endif %}>GET</option>
+                    <option value="POST" {% if current_method == 'POST' %}selected{% endif %}>POST</option>
+                    <option value="PUT" {% if current_method == 'PUT' %}selected{% endif %}>PUT</option>
+                    <option value="DELETE" {% if current_method == 'DELETE' %}selected{% endif %}>DELETE</option>
+                    <option value="PATCH" {% if current_method == 'PATCH' %}selected{% endif %}>PATCH</option>
+                </select>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="搜索用例..." value="{{ search }}" style="width:120px">
+                <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button>
+            </form>
+            <a href="{% url 'testcase_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增用例</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover table-striped mb-0">
+            <thead>
+                <tr>
+                    <th width="4%">#</th>
+                    <th width="18%">用例名称</th>
+                    <th width="8%">方法</th>
+                    <th width="20%">URL</th>
+                    <th width="10%">所属模块</th>
+                    <th width="10%">所属项目</th>
+                    <th width="8%">参数化</th>
+                    <th width="12%">更新时间</th>
+                    <th width="10%">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tc in testcases %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ tc.name }}</td>
+                    <td>
+                        <span class="badge {% if tc.method == 'GET' %}bg-success{% elif tc.method == 'POST' %}bg-primary{% elif tc.method == 'PUT' %}bg-warning{% elif tc.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %}">
+                            {{ tc.method }}
+                        </span>
+                    </td>
+                    <td><small class="text-truncate d-inline-block" style="max-width:180px">{{ tc.url }}</small></td>
+                    <td>{{ tc.module.name }}</td>
+                    <td>{{ tc.module.project.name }}</td>
+                    <td>{% if tc.is_parameterized %}<span class="badge bg-info">是</span>{% else %}<span class="text-muted">否</span>{% endif %}</td>
+                    <td>{{ tc.updated_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{% url 'testcase_update' tc.pk %}" class="btn btn-sm btn-outline-primary" title="编辑"><i class="bi bi-pencil"></i></a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="删除"
+                                    onclick="confirmDelete('{% url 'testcase_delete' tc.pk %}', '{{ tc.name }}')"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-muted py-4">暂无用例，点击上方按钮新增</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$('#filter-project').change(function() {
+    var projectId = $(this).val();
+    var moduleSelect = $('#filter-module');
+    moduleSelect.empty().append('<option value="">全部模块</option>');
+    if (projectId) {
+        $.get('{% url "load_modules" %}', {project_id: projectId}, function(data) {
+            data.forEach(function(m) {
+                moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

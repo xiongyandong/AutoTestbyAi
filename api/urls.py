@@ -3,6 +3,7 @@ from .views import dashboard as dashboard_views
 from .views import project as project_views
 from .views import module as module_views
 from .views import config as config_views
+from .views import testcase as testcase_views
 
 urlpatterns = [
     # Dashboard
@@ -26,4 +27,10 @@ urlpatterns = [
     path('configs/<int:pk>/update/', config_views.config_update, name='config_update'),
     path('configs/<int:pk>/delete/', config_views.config_delete, name='config_delete'),
     path('configs/load-modules/', config_views.load_modules, name='load_modules'),
+
+    # 用例管理
+    path('testcases/', testcase_views.testcase_list, name='testcase_list'),
+    path('testcases/create/', testcase_views.testcase_create, name='testcase_create'),
+    path('testcases/<int:pk>/update/', testcase_views.testcase_update, name='testcase_update'),
+    path('testcases/<int:pk>/delete/', testcase_views.testcase_delete, name='testcase_delete'),
 ]

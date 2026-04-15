@@ -9,28 +9,34 @@
 </div>
 
 <div class="row mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card stat-card">
             <div class="stat-number">{{ project_count }}</div>
             <div class="stat-label">项目总数</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card stat-card">
             <div class="stat-number">{{ module_count }}</div>
             <div class="stat-label">模块总数</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card stat-card">
             <div class="stat-number">{{ config_count }}</div>
             <div class="stat-label">配置总数</div>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ testcase_count }}</div>
+            <div class="stat-label">用例总数</div>
+        </div>
+    </div>
 </div>
 
 <div class="row mb-4">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">快捷操作</div>
             <div class="card-body">
@@ -38,11 +44,12 @@
                     <a href="{% url 'project_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> 新增项目</a>
                     <a href="{% url 'module_create' %}" class="btn btn-outline-primary"><i class="bi bi-plus-lg"></i> 新增模块</a>
                     <a href="{% url 'config_create' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-lg"></i> 新增配置</a>
+                    <a href="{% url 'testcase_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-lg"></i> 新增用例</a>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">最近更新的项目</div>
             <div class="card-body">
@@ -53,6 +60,24 @@
                 </div>
                 {% empty %}
                 <p class="text-muted mb-0">暂无项目</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">最近更新的用例</div>
+            <div class="card-body">
+                {% for tc in recent_testcases %}
+                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                    <div>
+                        <span class="badge {% if tc.method == 'GET' %}bg-success{% elif tc.method == 'POST' %}bg-primary{% elif tc.method == 'PUT' %}bg-warning{% elif tc.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %} me-1">{{ tc.method }}</span>
+                        <a href="{% url 'testcase_update' tc.pk %}">{{ tc.name }}</a>
+                    </div>
+                    <small class="text-muted">{{ tc.updated_at|date:"m-d H:i" }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">暂无用例</p>
                 {% endfor %}
             </div>
         </div>

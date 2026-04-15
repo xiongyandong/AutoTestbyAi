@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}{% if testcase %}编辑用例{% else %}新增用例{% endif %} - Pytest 测试平台{% endblock %}
+{% block nav_testcase %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col"><h4><i class="bi bi-list-check"></i> {% if testcase %}编辑用例{% else %}新增用例{% endif %}</h4></div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="testcase-form">
+            {% csrf_token %}
+
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-basic" type="button">基本信息</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-request" type="button">请求配置</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-extract" type="button">提取器</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-assert" type="button">断言</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-hooks" type="button">Hooks</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ddt" type="button">参数化</button></li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- ===== 基本信息 ===== -->
+                <div class="tab-pane fade show active" id="tab-basic">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">所属项目 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="project-select">
+                                    <option value="">请选择项目</option>
+                                    {% for p in projects %}
+                                    <option value="{{ p.pk }}" {% if testcase and testcase.module.project.pk == p.pk %}selected{% elif form_data and form_data.project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">所属模块 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="module" name="module" required>
+                                    <option value="">请先选择项目</option>
+                                    {% for m in modules %}
+                                    <option value="{{ m.pk }}" data-project="{{ m.project.pk }}"
+                                            {% if testcase and testcase.module.pk == m.pk %}selected{% elif form_data and form_data.module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">用例名称 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="name"
+                                       value="{% if form_data %}{{ form_data.name }}{% elif testcase %}{{ testcase.name }}{% endif %}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">创建人</label>
+                                <input type="text" class="form-control" name="created_by"
+                                       value="{% if form_data %}{{ form_data.created_by }}{% elif testcase %}{{ testcase.created_by }}{% endif %}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">请求方法 <span class="text-danger">*</span></label>
+                                <select class="form-select" name="method" id="method-select">
+                                    {% for val, label in method_choices %}
+                                    <option value="{{ val }}" {% if form_data and form_data.method == val %}selected{% elif testcase and testcase.method == val %}selected{% elif not testcase and val == 'GET' %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">请求URL <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="method-badge">GET</span>
+                                    <input type="text" class="form-control" name="url" placeholder="https://api.example.com/users"
+                                           value="{% if form_data %}{{ form_data.url }}{% elif testcase %}{{ testcase.url }}{% endif %}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== 请求配置 ===== -->
+                <div class="tab-pane fade" id="tab-request">
+                    <div class="mb-3">
+                        <label class="form-label">请求头 Headers (JSON)</label>
+                        <textarea class="form-control font-monospace" name="headers" rows="8">{% if form_data %}{{ form_data.headers }}{% elif testcase %}{{ testcase.headers|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <small class="text-muted">例: {"Content-Type": "application/json", "Authorization": "Bearer $token"}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">查询参数 Params (JSON)</label>
+                        <textarea class="form-control font-monospace" name="params" rows="6">{% if form_data %}{{ form_data.params }}{% elif testcase %}{{ testcase.params|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <small class="text-muted">例: {"page": 1, "size": 20}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">请求体 Body (JSON)</label>
+                        <textarea class="form-control font-monospace" name="body" rows="8">{% if form_data %}{{ form_data.body }}{% elif testcase %}{{ testcase.body|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <small class="text-muted">例: {"username": "admin", "password": "123456"}</small>
+                    </div>
+                </div>
+
+                <!-- ===== 提取器 ===== -->
+                <div class="tab-pane fade" id="tab-extract">
+                    <div class="mb-3">
+                        <label class="form-label">提取器 Extractors (JSON)</label>
+                        <textarea class="form-control font-monospace" name="extractors" rows="10" id="extractors-editor">{% if form_data %}{{ form_data.extractors }}{% elif testcase %}{{ testcase.extractors|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <small class="text-muted">
+                            从响应中提取变量，供后续用例使用。示例：<br>
+                            {<br>
+                            &nbsp;&nbsp;"token": {"type": "jsonpath", "path": "$.data.token"},<br>
+                            &nbsp;&nbsp;"user_id": {"type": "regex", "pattern": "id=(\\d+)"}<br>
+                            }
+                        </small>
+                    </div>
+                </div>
+
+                <!-- ===== 断言 ===== -->
+                <div class="tab-pane fade" id="tab-assert">
+                    <div class="mb-3">
+                        <label class="form-label">断言 Assertions (JSON Array)</label>
+                        <textarea class="form-control font-monospace" name="assertions" rows="10" id="assertions-editor">{% if form_data %}{{ form_data.assertions }}{% elif testcase %}{{ testcase.assertions|default:"[]" }}{% else %}[]{% endif %}</textarea>
+                        <small class="text-muted">
+                            验证响应是否符合预期。示例：<br>
+                            [<br>
+                            &nbsp;&nbsp;{"type": "status_code", "expected": 200},<br>
+                            &nbsp;&nbsp;{"type": "jsonpath", "path": "$.code", "operator": "eq", "expected": 0},<br>
+                            &nbsp;&nbsp;{"type": "jsonpath", "path": "$.data.name", "operator": "contains", "expected": "test"}<br>
+                            ]<br>
+                            支持的 operator: eq / not_eq / contains / not_contains / gt / lt / gte / lte / regex
+                        </small>
+                    </div>
+                </div>
+
+                <!-- ===== Hooks ===== -->
+                <div class="tab-pane fade" id="tab-hooks">
+                    <div class="mb-3">
+                        <label class="form-label">前置 Hooks Setup (JSON Array)</label>
+                        <textarea class="form-control font-monospace" name="setup_hooks" rows="6">{% if form_data %}{{ form_data.setup_hooks }}{% elif testcase %}{{ testcase.setup_hooks|default:"[]" }}{% else %}[]{% endif %}</textarea>
+                        <small class="text-muted">请求发送前执行的钩子。例: ["hook.setup_auth(request)"]</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">后置 Hooks Teardown (JSON Array)</label>
+                        <textarea class="form-control font-monospace" name="teardown_hooks" rows="6">{% if form_data %}{{ form_data.teardown_hooks }}{% elif testcase %}{{ testcase.teardown_hooks|default:"[]" }}{% else %}[]{% endif %}</textarea>
+                        <small class="text-muted">响应接收后执行的钩子。例: ["hook.log_response(response)"]</small>
+                    </div>
+                </div>
+
+                <!-- ===== 参数化 ===== -->
+                <div class="tab-pane fade" id="tab-ddt">
+                    <div class="mb-3">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="is_parameterized" id="is_parameterized"
+                                   {% if form_data and form_data.is_parameterized %}checked{% elif testcase and testcase.is_parameterized %}checked{% endif %}>
+                            <label class="form-check-label" for="is_parameterized">启用参数化</label>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 启用参数化后，该用例将基于数据源自动生成多条测试用例执行。DDT 数据源管理将在后续版本提供。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+                <a href="{% url 'testcase_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 项目→模块联动
+$('#project-select').change(function() {
+    var projectId = $(this).val();
+    var moduleSelect = $('#module');
+    moduleSelect.empty().append('<option value="">请选择模块</option>');
+    if (projectId) {
+        $.get('{% url "load_modules" %}', {project_id: projectId}, function(data) {
+            data.forEach(function(m) {
+                moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>');
+            });
+        });
+    }
+});
+
+// 方法选择联动 URL 前缀显示
+$('#method-select').change(function() {
+    $('#method-badge').text($(this).val());
+});
+
+// 提交前格式化 JSON
+$('#testcase-form').submit(function() {
+    ['headers', 'params', 'body', 'extractors', 'assertions', 'setup_hooks', 'teardown_hooks'].forEach(function(field) {
+        var el = $('[name="' + field + '"]');
+        try {
+            var parsed = JSON.parse(el.val());
+            el.val(JSON.stringify(parsed, null, 2));
+        } catch(e) {}
+    });
+});
+</script>
+{% endblock %}
