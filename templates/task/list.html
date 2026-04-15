@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}任务管理 - Pytest 测试平台{% endblock %}
+{% block nav_task %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col"><h4><i class="bi bi-play-circle"></i> 执行与调度</h4></div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span>任务列表</span>
+        <div class="d-flex gap-2 flex-wrap">
+            <form method="get" class="d-flex gap-1">
+                <select name="status" class="form-select form-select-sm" style="width:auto">
+                    <option value="">全部状态</option>
+                    <option value="PENDING" {% if current_status == 'PENDING' %}selected{% endif %}>待执行</option>
+                    <option value="RUNNING" {% if current_status == 'RUNNING' %}selected{% endif %}>执行中</option>
+                    <option value="COMPLETED" {% if current_status == 'COMPLETED' %}selected{% endif %}>已完成</option>
+                    <option value="FAILED" {% if current_status == 'FAILED' %}selected{% endif %}>执行失败</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button>
+            </form>
+            <a href="{% url 'task_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新建任务</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover table-striped mb-0">
+            <thead>
+                <tr>
+                    <th width="5%">#</th>
+                    <th width="20%">任务名称</th>
+                    <th width="8%">类型</th>
+                    <th width="10%">范围</th>
+                    <th width="8%">环境</th>
+                    <th width="10%">状态</th>
+                    <th width="10%">结果</th>
+                    <th width="12%">创建时间</th>
+                    <th width="17%">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ task.task_name }}</td>
+                    <td><span class="badge bg-secondary">{{ task.get_task_type_display }}</span></td>
+                    <td><span class="badge bg-info">{{ task.get_scope_display }}</span></td>
+                    <td><span class="badge bg-warning text-dark">{{ task.get_execute_env_display }}</span></td>
+                    <td>
+                        <span class="badge {% if task.status == 'COMPLETED' %}bg-success{% elif task.status == 'RUNNING' %}bg-primary{% elif task.status == 'FAILED' %}bg-danger{% else %}bg-secondary{% endif %}">
+                            {{ task.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% with result=task.results.first %}
+                        {% if result %}
+                        <span class="text-success">{{ result.passed }}</span>/<span class="text-muted">{{ result.total_cases }}</span>
+                        {% else %}-{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>{{ task.created_at|date:"m-d H:i" }}</td>
+                    <td>
+                        <div class="btn-group">
+                            {% if task.status == 'PENDING' or task.status == 'FAILED' %}
+                            <a href="{% url 'task_execute' task.pk %}" class="btn btn-sm btn-outline-success" title="执行" onclick="return confirm('确定要执行此任务吗？')">
+                                <i class="bi bi-play-fill"></i>
+                            </a>
+                            {% endif %}
+                            {% if task.results.exists %}
+                            <a href="{% url 'task_result' task.pk %}" class="btn btn-sm btn-outline-info" title="查看结果">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% endif %}
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="删除"
+                                    onclick="confirmDelete('{% url 'task_delete' task.pk %}', '{{ task.task_name }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-muted py-4">暂无任务</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

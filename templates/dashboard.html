@@ -41,6 +41,12 @@
     </div>
     <div class="col-md-2">
         <div class="card stat-card">
+            <div class="stat-number">{{ task_count }}</div>
+            <div class="stat-label">任务总数</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
             <div class="stat-number">{{ ddt_count }}</div>
             <div class="stat-label">数据源</div>
         </div>
@@ -59,6 +65,7 @@
                     <a href="{% url 'testcase_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-lg"></i> 新增用例</a>
                     <a href="{% url 'ddt_create' %}" class="btn btn-outline-info"><i class="bi bi-plus-lg"></i> 新增数据源</a>
                     <a href="{% url 'scene_create' %}" class="btn btn-outline-dark"><i class="bi bi-plus-lg"></i> 新增场景</a>
+                    <a href="{% url 'task_create' %}" class="btn btn-outline-warning"><i class="bi bi-play-fill"></i> 新建任务</a>
                 </div>
             </div>
         </div>

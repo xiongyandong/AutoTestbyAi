@@ -6,6 +6,7 @@ from .views import config as config_views
 from .views import testcase as testcase_views
 from .views import ddt as ddt_views
 from .views import scene as scene_views
+from .views import task as task_views
 
 urlpatterns = [
     # Dashboard
@@ -54,4 +55,12 @@ urlpatterns = [
     path('scenes/<int:pk>/remove-case/<int:case_pk>/', scene_views.scene_remove_case, name='scene_remove_case'),
     path('scenes/<int:pk>/reorder/', scene_views.scene_reorder, name='scene_reorder'),
     path('scenes/api/testcases/', scene_views.scene_testcases_api, name='scene_testcases_api'),
+
+    # 执行与调度
+    path('tasks/', task_views.task_list, name='task_list'),
+    path('tasks/create/', task_views.task_create, name='task_create'),
+    path('tasks/<int:pk>/delete/', task_views.task_delete, name='task_delete'),
+    path('tasks/<int:pk>/execute/', task_views.task_execute, name='task_execute'),
+    path('tasks/<int:pk>/result/', task_views.task_result, name='task_result'),
+    path('testcases/<int:pk>/quick-run/', task_views.testcase_quick_run, name='testcase_quick_run'),
 ]

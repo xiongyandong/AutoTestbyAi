@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from ..models import Project, Module, Config, TestCase, DDTSource, Scene
+from ..models import Project, Module, Config, TestCase, DDTSource, Scene, Task
 
 
 def dashboard(request):
@@ -9,6 +9,7 @@ def dashboard(request):
     testcase_count = TestCase.objects.count()
     ddt_count = DDTSource.objects.count()
     scene_count = Scene.objects.count()
+    task_count = Task.objects.count()
     recent_projects = Project.objects.order_by('-updated_at')[:5]
     recent_testcases = TestCase.objects.select_related('module', 'module__project').order_by('-updated_at')[:5]
 
@@ -19,6 +20,7 @@ def dashboard(request):
         'testcase_count': testcase_count,
         'ddt_count': ddt_count,
         'scene_count': scene_count,
+        'task_count': task_count,
         'recent_projects': recent_projects,
         'recent_testcases': recent_testcases,
         'nav_dashboard': 'active',
