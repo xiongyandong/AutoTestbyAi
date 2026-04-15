@@ -1,4 +1,1 @@
-from .project import *
-from .module import *
-from .config import *
-from .dashboard import *
+# Views are imported as submodules in urls.py

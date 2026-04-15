@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}首页概览 - Pytest 测试平台{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col"><h4><i class="bi bi-speedometer2"></i> 首页概览</h4></div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="stat-number">{{ project_count }}</div>
+            <div class="stat-label">项目总数</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="stat-number">{{ module_count }}</div>
+            <div class="stat-label">模块总数</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="stat-number">{{ config_count }}</div>
+            <div class="stat-label">配置总数</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">快捷操作</div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'project_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> 新增项目</a>
+                    <a href="{% url 'module_create' %}" class="btn btn-outline-primary"><i class="bi bi-plus-lg"></i> 新增模块</a>
+                    <a href="{% url 'config_create' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-lg"></i> 新增配置</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">最近更新的项目</div>
+            <div class="card-body">
+                {% for project in recent_projects %}
+                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                    <a href="{% url 'project_update' project.pk %}">{{ project.name }}</a>
+                    <small class="text-muted">{{ project.updated_at|date:"Y-m-d H:i" }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">暂无项目</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
