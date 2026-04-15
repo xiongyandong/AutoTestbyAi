@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, Module, Config
+from .models import Project, Module, Config, TestCase
 
 
 @admin.register(Project)
@@ -20,3 +20,10 @@ class ConfigAdmin(admin.ModelAdmin):
     list_display = ['name', 'module', 'env_type', 'created_by', 'created_at', 'updated_at']
     list_filter = ['env_type', 'module__project']
     search_fields = ['name']
+
+
+@admin.register(TestCase)
+class TestCaseAdmin(admin.ModelAdmin):
+    list_display = ['name', 'module', 'method', 'is_parameterized', 'created_by', 'updated_at']
+    list_filter = ['method', 'is_parameterized', 'module__project']
+    search_fields = ['name', 'url']

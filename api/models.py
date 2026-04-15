@@ -59,3 +59,37 @@ class Config(models.Model):
 
     def __str__(self):
         return f'{self.module} / {self.name}'
+
+
+class TestCase(models.Model):
+    METHOD_CHOICES = [
+        ('GET', 'GET'),
+        ('POST', 'POST'),
+        ('PUT', 'PUT'),
+        ('DELETE', 'DELETE'),
+        ('PATCH', 'PATCH'),
+    ]
+
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, verbose_name='所属模块', related_name='testcases')
+    name = models.CharField('用例名称', max_length=200)
+    method = models.CharField('请求方法', max_length=10, choices=METHOD_CHOICES, default='GET')
+    url = models.URLField('请求URL', max_length=500)
+    headers = models.JSONField('请求头', default=dict, blank=True)
+    params = models.JSONField('请求参数', default=dict, blank=True)
+    body = models.JSONField('请求体', default=dict, blank=True)
+    extractors = models.JSONField('提取器', default=dict, blank=True)
+    assertions = models.JSONField('断言', default=list, blank=True)
+    setup_hooks = models.JSONField('前置Hooks', default=list, blank=True)
+    teardown_hooks = models.JSONField('后置Hooks', default=list, blank=True)
+    is_parameterized = models.BooleanField('是否参数化', default=False)
+    created_by = models.CharField('创建人', max_length=50, blank=True, default='')
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = '测试用例'
+        verbose_name_plural = verbose_name
+        ordering = ['module', 'name']
+
+    def __str__(self):
+        return f'{self.module} / {self.name}'
