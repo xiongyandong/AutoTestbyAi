@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, Module, Config, TestCase, DDTSource
+from .models import Project, Module, Config, TestCase, DDTSource, Scene, SceneCase
 
 
 @admin.register(Project)
@@ -34,3 +34,16 @@ class DDTSourceAdmin(admin.ModelAdmin):
     list_display = ['name', 'source_type', 'description', 'created_at', 'updated_at']
     list_filter = ['source_type']
     search_fields = ['name']
+
+
+@admin.register(Scene)
+class SceneAdmin(admin.ModelAdmin):
+    list_display = ['name', 'project', 'created_by', 'updated_at']
+    list_filter = ['project']
+    search_fields = ['name']
+
+
+@admin.register(SceneCase)
+class SceneCaseAdmin(admin.ModelAdmin):
+    list_display = ['scene', 'testcase', 'order_index']
+    list_filter = ['scene__project']

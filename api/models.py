@@ -120,3 +120,34 @@ class TestCase(models.Model):
 
     def __str__(self):
         return f'{self.module} / {self.name}'
+
+
+class Scene(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='所属项目', related_name='scenes')
+    name = models.CharField('场景名称', max_length=200)
+    description = models.TextField('场景描述', blank=True, default='')
+    created_by = models.CharField('创建人', max_length=50, blank=True, default='')
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = '测试场景'
+        verbose_name_plural = verbose_name
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'{self.project.name} / {self.name}'
+
+
+class SceneCase(models.Model):
+    scene = models.ForeignKey(Scene, on_delete=models.CASCADE, verbose_name='所属场景', related_name='scene_cases')
+    testcase = models.ForeignKey(TestCase, on_delete=models.CASCADE, verbose_name='关联用例', related_name='scene_cases')
+    order_index = models.IntegerField('排序序号', default=0)
+
+    class Meta:
+        verbose_name = '场景用例'
+        verbose_name_plural = verbose_name
+        ordering = ['scene', 'order_index']
+
+    def __str__(self):
+        return f'{self.scene.name} -> {self.testcase.name} (#{self.order_index})'
