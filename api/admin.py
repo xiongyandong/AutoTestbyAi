@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, Module, Config, TestCase
+from .models import Project, Module, Config, TestCase, DDTSource
 
 
 @admin.register(Project)
@@ -24,6 +24,13 @@ class ConfigAdmin(admin.ModelAdmin):
 
 @admin.register(TestCase)
 class TestCaseAdmin(admin.ModelAdmin):
-    list_display = ['name', 'module', 'method', 'is_parameterized', 'created_by', 'updated_at']
+    list_display = ['name', 'module', 'method', 'is_parameterized', 'ddt_source', 'created_by', 'updated_at']
     list_filter = ['method', 'is_parameterized', 'module__project']
     search_fields = ['name', 'url']
+
+
+@admin.register(DDTSource)
+class DDTSourceAdmin(admin.ModelAdmin):
+    list_display = ['name', 'source_type', 'description', 'created_at', 'updated_at']
+    list_filter = ['source_type']
+    search_fields = ['name']

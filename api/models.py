@@ -61,6 +61,32 @@ class Config(models.Model):
         return f'{self.module} / {self.name}'
 
 
+class DDTSource(models.Model):
+    SOURCE_TYPE_CHOICES = [
+        ('JSON', 'JSON'),
+        ('YAML', 'YAML'),
+        ('CSV', 'CSV'),
+        ('DB', '数据库'),
+    ]
+
+    name = models.CharField('数据源名称', max_length=100)
+    source_type = models.CharField('数据源类型', max_length=10, choices=SOURCE_TYPE_CHOICES, default='JSON')
+    file_path = models.CharField('文件路径', max_length=500, blank=True, default='', help_text='JSON/YAML/CSV 文件的相对路径')
+    db_query = models.TextField('数据库查询', blank=True, default='', help_text='仅数据库类型使用，SQL 查询语句')
+    content = models.TextField('数据内容', blank=True, default='', help_text='直接内嵌的 JSON/YAML 数据')
+    description = models.TextField('描述', blank=True, default='')
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = 'DDT 数据源'
+        verbose_name_plural = verbose_name
+        ordering = ['name']
+
+    def __str__(self):
+        return f'{self.name} ({self.get_source_type_display()})'
+
+
 class TestCase(models.Model):
     METHOD_CHOICES = [
         ('GET', 'GET'),
@@ -82,6 +108,7 @@ class TestCase(models.Model):
     setup_hooks = models.JSONField('前置Hooks', default=list, blank=True)
     teardown_hooks = models.JSONField('后置Hooks', default=list, blank=True)
     is_parameterized = models.BooleanField('是否参数化', default=False)
+    ddt_source = models.ForeignKey(DDTSource, on_delete=models.SET_NULL, verbose_name='DDT数据源', related_name='testcases', null=True, blank=True)
     created_by = models.CharField('创建人', max_length=50, blank=True, default='')
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
