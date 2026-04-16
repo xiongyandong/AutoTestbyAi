@@ -1,5 +1,4 @@
 """Task helper utilities shared between views and Celery tasks."""
-
 import json
 from .models import TestCase, Config
 
