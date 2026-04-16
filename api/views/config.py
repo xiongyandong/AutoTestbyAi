@@ -1,6 +1,7 @@
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from ..models import Config, Module, Project
 
@@ -20,8 +21,11 @@ def config_list(request):
     modules = Module.objects.all()
     if project_id:
         modules = modules.filter(project_id=project_id)
+    paginator = Paginator(configs, 15)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
     return render(request, 'config/list.html', {
-        'configs': configs,
+        'page_obj': page_obj,
         'projects': projects,
         'modules': modules,
         'current_project': project_id,

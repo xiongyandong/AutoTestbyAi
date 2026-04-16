@@ -3,28 +3,31 @@
 {% block title %}项目管理 - Pytest 测试平台{% endblock %}
 {% block nav_project %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item active">项目管理</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col">
-        <h4><i class="bi bi-folder"></i> 项目管理</h4>
-    </div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-folder"></i> 项目管理</h4>
+    <a href="{% url 'project_create' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg"></i> 新增项目
+    </a>
 </div>
 
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" class="d-flex gap-2 align-items-center">
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="搜索项目..." value="{{ search }}" style="max-width:220px">
+        <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+</div>
+
+<!-- Table -->
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span>项目列表</span>
-        <div class="d-flex gap-2">
-            <form method="get" class="d-flex">
-                <input type="text" name="search" class="form-control form-control-sm" placeholder="搜索项目..." value="{{ search }}">
-                <button type="submit" class="btn btn-sm btn-outline-secondary ms-1">
-                    <i class="bi bi-search"></i>
-                </button>
-            </form>
-            <a href="{% url 'project_create' %}" class="btn btn-sm btn-primary">
-                <i class="bi bi-plus-lg"></i> 新增项目
-            </a>
-        </div>
-    </div>
     <div class="card-body">
         <table class="table table-hover table-striped mb-0">
             <thead>
@@ -39,15 +42,15 @@
                 </tr>
             </thead>
             <tbody>
-                {% for project in projects %}
+                {% for project in page_obj.object_list %}
                 <tr>
-                    <td>{{ forloop.counter }}</td>
+                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
                     <td>{{ project.name }}</td>
                     <td>{{ project.description|default:"-"|truncatechars:30 }}</td>
                     <td>{{ project.created_by|default:"-" }}</td>
                     <td>{{ project.modules.count }}</td>
                     <td>{{ project.updated_at|date:"Y-m-d H:i" }}</td>
-                    <td>
+                    <td class="actions">
                         <div class="btn-group">
                             <a href="{% url 'project_update' project.pk %}" class="btn btn-sm btn-outline-primary" title="编辑">
                                 <i class="bi bi-pencil"></i>
@@ -61,11 +64,53 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">暂无项目，点击上方按钮新增</td>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-folder2-open"></i>
+                            <p>暂无项目</p>
+                            <a href="{% url 'project_create' %}" class="btn btn-primary btn-sm">新增项目</a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination-wrapper">
+    <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
+    <nav>
+        <ul class="pagination pagination-sm">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
 {% endblock %}

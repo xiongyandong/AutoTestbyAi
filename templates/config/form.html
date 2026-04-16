@@ -3,16 +3,22 @@
 {% block title %}{% if config %}编辑配置{% else %}新增配置{% endif %} - Pytest 测试平台{% endblock %}
 {% block nav_config %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'config_list' %}">配置管理</a></li>
+<li class="breadcrumb-item active">{% if config %}编辑配置{% else %}新增配置{% endif %}</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col"><h4><i class="bi bi-gear"></i> {% if config %}编辑配置{% else %}新增配置{% endif %}</h4></div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-gear"></i> {% if config %}编辑配置{% else %}新增配置{% endif %}</h4>
 </div>
 
 <div class="card">
-    <div class="card-body">
-        <form method="post" id="config-form">
-            {% csrf_token %}
-
+    <div class="card-header">{% if config %}编辑配置{% else %}新增配置{% endif %}</div>
+    <form method="post" id="config-form" data-json-format="true">
+        {% csrf_token %}
+        <div class="card-body">
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic" type="button">基本信息</button></li>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#vars" type="button">全局变量</button></li>
@@ -62,12 +68,20 @@
                 <div class="tab-pane fade" id="vars">
                     <div class="mb-3">
                         <label for="variables" class="form-label">全局变量 (JSON)</label>
-                        <textarea class="form-control font-monospace" id="variables" name="variables" rows="8">{% if form_data %}{{ form_data.variables }}{% elif config %}{{ config.variables|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <div class="json-field-toolbar">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('variables')"><i class="bi bi-code-slash"></i> 格式化</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('variables')"><i class="bi bi-check-circle"></i> 验证</button>
+                        </div>
+                        <textarea class="form-control font-monospace" id="variables" name="variables" data-json="true" rows="8">{% if form_data %}{{ form_data.variables }}{% elif config %}{{ config.variables|default:"{}" }}{% else %}{}{% endif %}</textarea>
                         <small class="text-muted">例: {"base_url": "http://api.example.com", "timeout": 30}</small>
                     </div>
                     <div class="mb-3">
                         <label for="parameters" class="form-label">公共请求参数 (JSON)</label>
-                        <textarea class="form-control font-monospace" id="parameters" name="parameters" rows="8">{% if form_data %}{{ form_data.parameters }}{% elif config %}{{ config.parameters|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <div class="json-field-toolbar">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('parameters')"><i class="bi bi-code-slash"></i> 格式化</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('parameters')"><i class="bi bi-check-circle"></i> 验证</button>
+                        </div>
+                        <textarea class="form-control font-monospace" id="parameters" name="parameters" data-json="true" rows="8">{% if form_data %}{{ form_data.parameters }}{% elif config %}{{ config.parameters|default:"{}" }}{% else %}{}{% endif %}</textarea>
                         <small class="text-muted">例: {"headers": {"Content-Type": "application/json"}}</small>
                     </div>
                 </div>
@@ -75,23 +89,30 @@
                 <div class="tab-pane fade" id="hooks">
                     <div class="mb-3">
                         <label for="request_hooks" class="form-label">请求 Hooks (JSON)</label>
-                        <textarea class="form-control font-monospace" id="request_hooks" name="request_hooks" rows="8">{% if form_data %}{{ form_data.request_hooks }}{% elif config %}{{ config.request_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <div class="json-field-toolbar">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('request_hooks')"><i class="bi bi-code-slash"></i> 格式化</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('request_hooks')"><i class="bi bi-check-circle"></i> 验证</button>
+                        </div>
+                        <textarea class="form-control font-monospace" id="request_hooks" name="request_hooks" data-json="true" rows="8">{% if form_data %}{{ form_data.request_hooks }}{% elif config %}{{ config.request_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
                         <small class="text-muted">例: {"setup": ["hook.add_token(request)"]}</small>
                     </div>
                     <div class="mb-3">
                         <label for="response_hooks" class="form-label">响应 Hooks (JSON)</label>
-                        <textarea class="form-control font-monospace" id="response_hooks" name="response_hooks" rows="8">{% if form_data %}{{ form_data.response_hooks }}{% elif config %}{{ config.response_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        <div class="json-field-toolbar">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('response_hooks')"><i class="bi bi-code-slash"></i> 格式化</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('response_hooks')"><i class="bi bi-check-circle"></i> 验证</button>
+                        </div>
+                        <textarea class="form-control font-monospace" id="response_hooks" name="response_hooks" data-json="true" rows="8">{% if form_data %}{{ form_data.response_hooks }}{% elif config %}{{ config.response_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
                         <small class="text-muted">例: {"teardown": ["hook.log_response(response)"]}</small>
                     </div>
                 </div>
             </div>
-
-            <div class="d-flex gap-2 mt-3">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
-                <a href="{% url 'config_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+            <a href="{% url 'config_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
+        </div>
+    </form>
 </div>
 {% endblock %}
 
@@ -108,16 +129,6 @@ $('#project-select').change(function() {
             });
         });
     }
-});
-
-$('#config-form').submit(function() {
-    ['variables', 'parameters', 'request_hooks', 'response_hooks'].forEach(function(field) {
-        var el = $('#' + field);
-        try {
-            var parsed = JSON.parse(el.val());
-            el.val(JSON.stringify(parsed, null, 2));
-        } catch(e) {}
-    });
 });
 </script>
 {% endblock %}

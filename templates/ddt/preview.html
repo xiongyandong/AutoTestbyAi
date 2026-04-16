@@ -4,15 +4,22 @@
 {% block title %}数据源预览 - {{ source.name }} - Pytest 测试平台{% endblock %}
 {% block nav_ddt %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'ddt_list' %}">数据源</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ddt_update' source.pk %}">{{ source.name }}</a></li>
+<li class="breadcrumb-item active">预览</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col d-flex justify-content-between align-items-center">
-        <h4><i class="bi bi-database"></i> 数据源预览: {{ source.name }}</h4>
-        <a href="{% url 'ddt_update' source.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> 编辑</a>
-    </div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-database"></i> 数据源预览: {{ source.name }}</h4>
+    <a href="{% url 'ddt_update' source.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> 编辑</a>
 </div>
 
+<!-- Metadata Card -->
 <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-info-circle"></i> 基本信息</div>
     <div class="card-body">
         <div class="row">
             <div class="col-md-3"><strong>名称:</strong> {{ source.name }}</div>
@@ -24,6 +31,7 @@
     </div>
 </div>
 
+<!-- Data Table -->
 <div class="card">
     <div class="card-header">数据预览 {% if total > 50 %}<small class="text-muted">(仅显示前50条，共{{ total }}条)</small>{% endif %}</div>
     <div class="card-body">
@@ -53,12 +61,14 @@
             </table>
         </div>
         {% else %}
-        <div class="text-center text-muted py-4">无可展示的结构化数据</div>
+        <div class="empty-state">
+            <i class="bi bi-database"></i>
+            <p>无可展示的结构化数据</p>
+        </div>
         {% endif %}
     </div>
-</div>
-
-<div class="mt-3">
-    <a href="{% url 'ddt_list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> 返回列表</a>
+    <div class="card-footer">
+        <a href="{% url 'ddt_list' %}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> 返回列表</a>
+    </div>
 </div>
 {% endblock %}

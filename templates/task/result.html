@@ -3,96 +3,195 @@
 {% block title %}任务结果 - {{ task.task_name }} - Pytest 测试平台{% endblock %}
 {% block nav_task %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'task_list' %}">执行与调度</a></li>
+<li class="breadcrumb-item"><a href="{% url 'task_result' task.pk %}">{{ task.task_name }}</a></li>
+<li class="breadcrumb-item active">执行结果</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col d-flex justify-content-between align-items-center">
-        <h4><i class="bi bi-play-circle"></i> 任务结果: {{ task.task_name }}</h4>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-play-circle"></i> 执行结果: {{ task.task_name }}</h4>
+    <div>
+        {% if task.status == 'RUNNING' %}
+        <span class="badge badge-status-running fs-6" id="running-indicator">
+            <span class="spinner-border spinner-border-sm me-1 spinner-pulse"></span> 执行中...
+        </span>
+        {% endif %}
         <a href="{% url 'task_list' %}" class="btn btn-sm btn-secondary"><i class="bi bi-arrow-left"></i> 返回列表</a>
     </div>
 </div>
 
+<!-- Task Info Card -->
 <div class="card mb-3">
-    <div class="card-header">任务信息</div>
+    <div class="card-header"><i class="bi bi-info-circle"></i> 任务信息</div>
     <div class="card-body">
         <div class="row">
             <div class="col-md-3"><strong>任务名称:</strong> {{ task.task_name }}</div>
-            <div class="col-md-2"><strong>执行范围:</strong> {{ task.get_scope_display }}</div>
-            <div class="col-md-2"><strong>执行环境:</strong> {{ task.get_execute_env_display }}</div>
+            <div class="col-md-2"><strong>执行方式:</strong>
+                {% if task.task_type == 'SYNC' %}
+                <span class="badge badge-type-sync">同步</span>
+                {% elif task.task_type == 'ASYNC' %}
+                <span class="badge badge-type-async">异步</span>
+                {% elif task.task_type == 'SCHEDULE' %}
+                <span class="badge badge-type-schedule">定时</span>
+                {% endif %}
+            </div>
+            <div class="col-md-2"><strong>执行范围:</strong> <span class="badge badge-type-scope">{{ task.get_scope_display }}</span></div>
+            <div class="col-md-2"><strong>执行环境:</strong> <span class="badge badge-env-{{ task.execute_env|lower }}">{{ task.get_execute_env_display }}</span></div>
             <div class="col-md-2"><strong>状态:</strong>
-                <span class="badge {% if task.status == 'COMPLETED' %}bg-success{% elif task.status == 'RUNNING' %}bg-primary{% elif task.status == 'FAILED' %}bg-danger{% else %}bg-secondary{% endif %}">
+                <span class="badge badge-status-{{ task.status|lower }} task-status-badge" id="status-badge">
                     {{ task.get_status_display }}
                 </span>
             </div>
-            <div class="col-md-3"><strong>创建人:</strong> {{ task.created_by|default:"-" }}</div>
         </div>
+        {% if task.task_type == 'SCHEDULE' and task.cron_expression %}
+        <div class="row mt-2">
+            <div class="col-md-3"><strong>Cron 表达式:</strong> <code>{{ task.cron_expression }}</code></div>
+            <div class="col-md-2"><strong>邮件通知:</strong> {% if task.email_notify %}<span class="badge badge-status-completed">开启</span>{% else %}<span class="badge badge-status-pending">关闭</span>{% endif %}</div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
+<div id="result-section">
 {% if result %}
-<div class="card mb-3">
-    <div class="card-header">执行统计</div>
-    <div class="card-body">
-        <div class="row text-center mb-3">
-            <div class="col">
-                <div class="fs-4 fw-bold text-primary">{{ result.total_cases }}</div>
-                <small class="text-muted">总数</small>
-            </div>
-            <div class="col">
-                <div class="fs-4 fw-bold text-success">{{ result.passed }}</div>
-                <small class="text-muted">通过</small>
-            </div>
-            <div class="col">
-                <div class="fs-4 fw-bold text-danger">{{ result.failed }}</div>
-                <small class="text-muted">失败</small>
-            </div>
-            <div class="col">
-                <div class="fs-4 fw-bold text-warning">{{ result.error }}</div>
-                <small class="text-muted">错误</small>
-            </div>
-            <div class="col">
-                <div class="fs-4 fw-bold text-secondary">{{ result.skipped }}</div>
-                <small class="text-muted">跳过</small>
-            </div>
-            <div class="col">
-                <div class="fs-4 fw-bold">{{ result.duration }}s</div>
-                <small class="text-muted">耗时</small>
+<!-- Stat Cards -->
+<div class="row mb-3">
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="stat-icon stat-bg-primary"><i class="bi bi-list-check"></i></div>
+            <div class="stat-info">
+                <div class="stat-number">{{ result.total_cases }}</div>
+                <div class="stat-label">总数</div>
             </div>
         </div>
-
-        {% if result.total_cases > 0 %}
-        <div class="mb-3">
-            <label class="form-label">通过率</label>
-            <div class="progress" style="height: 24px;">
-                <div class="progress-bar bg-success" style="width: {% widthratio result.passed result.total_cases 100 %}%">{{ result.passed }}</div>
-                <div class="progress-bar bg-danger" style="width: {% widthratio result.failed result.total_cases 100 %}%">{{ result.failed }}</div>
-                <div class="progress-bar bg-warning" style="width: {% widthratio result.error result.total_cases 100 %}%">{{ result.error }}</div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="stat-icon stat-bg-success"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-number text-success">{{ result.passed }}</div>
+                <div class="stat-label">通过</div>
             </div>
         </div>
-        {% endif %}
-
-        {% if result.report_path %}
-        <div class="mb-3">
-            <strong>报告路径:</strong> <code>{{ result.report_path }}</code>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="stat-icon stat-bg-danger"><i class="bi bi-x-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-number text-danger">{{ result.failed }}</div>
+                <div class="stat-label">失败</div>
+            </div>
         </div>
-        {% endif %}
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="stat-icon stat-bg-warning"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="stat-info">
+                <div class="stat-number text-warning">{{ result.error }}</div>
+                <div class="stat-label">错误</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="stat-icon stat-bg-purple"><i class="bi bi-skip-forward-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-number">{{ result.skipped }}</div>
+                <div class="stat-label">跳过</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="stat-icon stat-bg-info"><i class="bi bi-stopwatch"></i></div>
+            <div class="stat-info">
+                <div class="stat-number">{{ result.duration }}s</div>
+                <div class="stat-label">耗时</div>
+            </div>
+        </div>
     </div>
 </div>
 
-{% if result.log %}
-<div class="card">
-    <div class="card-header">执行日志</div>
+<!-- Progress Bar -->
+{% if result.total_cases > 0 %}
+<div class="card mb-3">
     <div class="card-body">
-        <pre class="bg-dark text-light p-3 rounded" style="max-height:400px;overflow-y:auto"><code>{{ result.log }}</code></pre>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong>通过率</strong>
+            <span class="fs-5 fw-bold {% widthratio result.passed result.total_cases 100 as pr %}{% if pr >= 80 %}text-success{% elif pr >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ pr }}%</span>
+        </div>
+        <div class="progress" style="height:24px;">
+            <div class="progress-bar bg-success" style="width: {% widthratio result.passed result.total_cases 100 %}%">{{ result.passed }}</div>
+            <div class="progress-bar bg-danger" style="width: {% widthratio result.failed result.total_cases 100 %}%">{{ result.failed }}</div>
+            <div class="progress-bar bg-warning" style="width: {% widthratio result.error result.total_cases 100 %}%">{{ result.error }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if result.report_path %}
+<div class="card mb-3">
+    <div class="card-body">
+        <strong>报告路径:</strong> <code>{{ result.report_path }}</code>
+        <a href="{% url 'report_detail' result.pk %}" class="btn btn-sm btn-outline-primary ms-2"><i class="bi bi-eye"></i> 查看报告</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Log Area -->
+{% if result.log %}
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-terminal"></i> 执行日志</div>
+    <div class="card-body">
+        <pre class="terminal-log"><code>{{ result.log }}</code></pre>
     </div>
 </div>
 {% endif %}
 
 {% else %}
-<div class="card">
+<div class="card" id="no-result-card">
     <div class="card-body text-center text-muted py-5">
         <i class="bi bi-hourglass" style="font-size:2rem"></i>
         <p class="mt-2 mb-0">暂无执行结果</p>
+        {% if task.status == 'RUNNING' %}
+        <p class="text-primary small mt-1">任务正在执行中，页面将自动刷新...</p>
+        {% endif %}
     </div>
 </div>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if task.status == 'RUNNING' %}
+<script>
+// 异步任务自动轮询状态
+(function pollStatus() {
+    $.get('{% url "task_status" task.pk %}', function(data) {
+        var badge = $('#status-badge');
+        var statusClass = 'badge-status-pending';
+        if (data.status === 'COMPLETED') statusClass = 'badge-status-completed';
+        else if (data.status === 'RUNNING') statusClass = 'badge-status-running';
+        else if (data.status === 'FAILED') statusClass = 'badge-status-failed';
+
+        badge.removeClass('badge-status-completed badge-status-running badge-status-failed badge-status-pending').addClass(statusClass).text(data.status_display);
+
+        if (data.status === 'RUNNING') {
+            // 仍在执行，3秒后继续轮询
+            setTimeout(pollStatus, 3000);
+        } else {
+            // 执行完成，刷新页面显示结果
+            $('#running-indicator').remove();
+            location.reload();
+        }
+    }).fail(function() {
+        // 网络错误时继续轮询
+        setTimeout(pollStatus, 5000);
+    });
+})();
+</script>
 {% endif %}
 {% endblock %}

@@ -7,6 +7,7 @@ from .views import testcase as testcase_views
 from .views import ddt as ddt_views
 from .views import scene as scene_views
 from .views import task as task_views
+from .views import report as report_views
 
 urlpatterns = [
     # Dashboard
@@ -62,5 +63,11 @@ urlpatterns = [
     path('tasks/<int:pk>/delete/', task_views.task_delete, name='task_delete'),
     path('tasks/<int:pk>/execute/', task_views.task_execute, name='task_execute'),
     path('tasks/<int:pk>/result/', task_views.task_result, name='task_result'),
+    path('tasks/<int:pk>/status/', task_views.task_status, name='task_status'),
     path('testcases/<int:pk>/quick-run/', task_views.testcase_quick_run, name='testcase_quick_run'),
+
+    # 报告中心
+    path('reports/', report_views.report_list, name='report_list'),
+    path('reports/<int:pk>/', report_views.report_detail, name='report_detail'),
+    path('reports/<int:pk>/download/', report_views.report_download, name='report_download'),
 ]

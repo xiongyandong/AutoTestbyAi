@@ -3,28 +3,37 @@
 {% block title %}场景编排 - Pytest 测试平台{% endblock %}
 {% block nav_scene %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item active">场景编排</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col"><h4><i class="bi bi-diagram-2"></i> 场景编排</h4></div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-diagram-2"></i> 场景编排</h4>
+    <a href="{% url 'scene_create' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg"></i> 新增场景
+    </a>
 </div>
 
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" class="d-flex gap-2 align-items-center">
+        <select name="project" class="form-select form-select-sm" style="width:auto">
+            <option value="">全部项目</option>
+            {% for p in projects %}
+            <option value="{{ p.pk }}" {% if current_project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="搜索场景..." value="{{ search }}" style="max-width:220px">
+        <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+</div>
+
+<!-- Table -->
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <span>场景列表</span>
-        <div class="d-flex gap-2 flex-wrap">
-            <form method="get" class="d-flex gap-1">
-                <select name="project" class="form-select form-select-sm" style="width:auto">
-                    <option value="">全部项目</option>
-                    {% for p in projects %}
-                    <option value="{{ p.pk }}" {% if current_project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
-                    {% endfor %}
-                </select>
-                <input type="text" name="search" class="form-control form-control-sm" placeholder="搜索场景..." value="{{ search }}" style="width:120px">
-                <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button>
-            </form>
-            <a href="{% url 'scene_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增场景</a>
-        </div>
-    </div>
     <div class="card-body">
         <table class="table table-hover table-striped mb-0">
             <thead>
@@ -39,15 +48,15 @@
                 </tr>
             </thead>
             <tbody>
-                {% for scene in scenes %}
+                {% for scene in page_obj.object_list %}
                 <tr>
-                    <td>{{ forloop.counter }}</td>
+                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
                     <td>{{ scene.name }}</td>
                     <td>{{ scene.project.name }}</td>
                     <td>{{ scene.description|default:"-"|truncatechars:30 }}</td>
                     <td>{{ scene.scene_cases.count }}</td>
                     <td>{{ scene.created_by|default:"-" }}</td>
-                    <td>
+                    <td class="actions">
                         <div class="btn-group">
                             <a href="{% url 'scene_orchestrate' scene.pk %}" class="btn btn-sm btn-outline-success" title="编排"><i class="bi bi-diagram-2"></i></a>
                             <a href="{% url 'scene_update' scene.pk %}" class="btn btn-sm btn-outline-primary" title="编辑"><i class="bi bi-pencil"></i></a>
@@ -57,10 +66,54 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="7" class="text-center text-muted py-4">暂无场景，点击上方按钮新增</td></tr>
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-diagram-2"></i>
+                            <p>暂无场景</p>
+                            <a href="{% url 'scene_create' %}" class="btn btn-primary btn-sm">新增场景</a>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination-wrapper">
+    <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
+    <nav>
+        <ul class="pagination pagination-sm">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if current_project %}&project={{ current_project }}{% endif %}{% if search %}&search={{ search }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if search %}&search={{ search }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if current_project %}&project={{ current_project }}{% endif %}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if search %}&search={{ search }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_project %}&project={{ current_project }}{% endif %}{% if search %}&search={{ search }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
 {% endblock %}

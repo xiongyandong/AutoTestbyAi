@@ -3,29 +3,38 @@
 {% block title %}DDT 数据源 - Pytest 测试平台{% endblock %}
 {% block nav_ddt %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item active">数据源管理</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col"><h4><i class="bi bi-database"></i> DDT 数据源管理</h4></div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-database"></i> DDT 数据源管理</h4>
+    <a href="{% url 'ddt_create' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg"></i> 新增数据源
+    </a>
 </div>
 
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" class="d-flex gap-2 align-items-center">
+        <select name="source_type" class="form-select form-select-sm" style="width:auto">
+            <option value="">全部类型</option>
+            <option value="JSON" {% if current_type == 'JSON' %}selected{% endif %}>JSON</option>
+            <option value="YAML" {% if current_type == 'YAML' %}selected{% endif %}>YAML</option>
+            <option value="CSV" {% if current_type == 'CSV' %}selected{% endif %}>CSV</option>
+            <option value="DB" {% if current_type == 'DB' %}selected{% endif %}>数据库</option>
+        </select>
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="搜索..." value="{{ search }}" style="max-width:220px">
+        <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+</div>
+
+<!-- Table -->
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <span>数据源列表</span>
-        <div class="d-flex gap-2 flex-wrap">
-            <form method="get" class="d-flex gap-1">
-                <select name="source_type" class="form-select form-select-sm" style="width:auto">
-                    <option value="">全部类型</option>
-                    <option value="JSON" {% if current_type == 'JSON' %}selected{% endif %}>JSON</option>
-                    <option value="YAML" {% if current_type == 'YAML' %}selected{% endif %}>YAML</option>
-                    <option value="CSV" {% if current_type == 'CSV' %}selected{% endif %}>CSV</option>
-                    <option value="DB" {% if current_type == 'DB' %}selected{% endif %}>数据库</option>
-                </select>
-                <input type="text" name="search" class="form-control form-control-sm" placeholder="搜索..." value="{{ search }}" style="width:120px">
-                <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button>
-            </form>
-            <a href="{% url 'ddt_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增数据源</a>
-        </div>
-    </div>
     <div class="card-body">
         <table class="table table-hover table-striped mb-0">
             <thead>
@@ -40,15 +49,15 @@
                 </tr>
             </thead>
             <tbody>
-                {% for src in sources %}
+                {% for src in page_obj.object_list %}
                 <tr>
-                    <td>{{ forloop.counter }}</td>
+                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
                     <td>{{ src.name }}</td>
-                    <td><span class="badge {% if src.source_type == 'JSON' %}bg-success{% elif src.source_type == 'YAML' %}bg-info{% elif src.source_type == 'CSV' %}bg-warning{% else %}bg-secondary{% endif %}">{{ src.source_type }}</span></td>
+                    <td><span class="badge badge-type-{{ src.source_type|lower }}">{{ src.source_type }}</span></td>
                     <td>{{ src.description|default:"-"|truncatechars:40 }}</td>
                     <td>{{ src.testcases.count }}</td>
                     <td>{{ src.updated_at|date:"Y-m-d H:i" }}</td>
-                    <td>
+                    <td class="actions">
                         <div class="btn-group">
                             <a href="{% url 'ddt_preview' src.pk %}" class="btn btn-sm btn-outline-info" title="预览"><i class="bi bi-eye"></i></a>
                             <a href="{% url 'ddt_update' src.pk %}" class="btn btn-sm btn-outline-primary" title="编辑"><i class="bi bi-pencil"></i></a>
@@ -58,10 +67,54 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="7" class="text-center text-muted py-4">暂无数据源，点击上方按钮新增</td></tr>
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-database"></i>
+                            <p>暂无数据源</p>
+                            <a href="{% url 'ddt_create' %}" class="btn btn-primary btn-sm">新增数据源</a>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination-wrapper">
+    <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
+    <nav>
+        <ul class="pagination pagination-sm">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if current_type %}&source_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&source_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&source_type={{ current_type }}{% endif %}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&source_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&source_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
 {% endblock %}

@@ -4,6 +4,7 @@ import csv
 import io
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from ..models import DDTSource
 
@@ -17,8 +18,11 @@ def ddt_list(request):
         sources = sources.filter(source_type=source_type)
     if search:
         sources = sources.filter(name__icontains=search)
+    paginator = Paginator(sources, 15)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
     return render(request, 'ddt/list.html', {
-        'sources': sources,
+        'page_obj': page_obj,
         'current_type': source_type,
         'search': search,
         'nav_ddt': 'active',

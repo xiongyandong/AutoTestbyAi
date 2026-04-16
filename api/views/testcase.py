@@ -1,6 +1,7 @@
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from ..models import TestCase, Module, Project, DDTSource
 
@@ -39,8 +40,11 @@ def testcase_list(request):
     if ctx['search']:
         testcases = testcases.filter(name__icontains=ctx['search'])
 
+    paginator = Paginator(testcases, 15)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
     ctx.update({
-        'testcases': testcases,
+        'page_obj': page_obj,
         'nav_testcase': 'active',
     })
     return render(request, 'testcase/list.html', ctx)

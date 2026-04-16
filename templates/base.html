@@ -4,80 +4,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Pytest 测试平台{% endblock %}</title>
+    <title>{% block title %}测试管理平台{% endblock %}</title>
+    <link rel="icon" href="{% static 'icon/20260407_2041443922915495936.png' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 </head>
 <body>
-    <!-- 顶部导航 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">
-                <i class="bi bi-clipboard-check"></i> Pytest 测试平台
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <a class="sidebar-brand" href="{% url 'dashboard' %}">
+            <i class="bi bi-clipboard-check"></i> Pytest 测试平台
+        </a>
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
+                    <i class="bi bi-speedometer2"></i> 首页概览
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% block nav_project %}{% endblock %}" href="{% url 'project_list' %}">
+                    <i class="bi bi-folder"></i> 项目管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% block nav_module %}{% endblock %}" href="{% url 'module_list' %}">
+                    <i class="bi bi-diagram-3"></i> 模块管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% block nav_config %}{% endblock %}" href="{% url 'config_list' %}">
+                    <i class="bi bi-gear"></i> 配置管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% block nav_testcase %}{% endblock %}" href="{% url 'testcase_list' %}">
+                    <i class="bi bi-list-check"></i> 用例管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% block nav_ddt %}{% endblock %}" href="{% url 'ddt_list' %}">
+                    <i class="bi bi-database"></i> 数据源
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% block nav_scene %}{% endblock %}" href="{% url 'scene_list' %}">
+                    <i class="bi bi-diagram-2"></i> 场景编排
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% block nav_task %}{% endblock %}" href="{% url 'task_list' %}">
+                    <i class="bi bi-play-circle"></i> 执行与调度
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% block nav_report %}{% endblock %}" href="{% url 'report_list' %}">
+                    <i class="bi bi-file-earmark-bar-graph"></i> 报告中心
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            Pytest 测试平台 v1.0
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <button class="sidebar-toggle" type="button">
+                <i class="bi bi-list"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
-                            <i class="bi bi-speedometer2"></i> 首页概览
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% block nav_project %}{% endblock %}" href="{% url 'project_list' %}">
-                            <i class="bi bi-folder"></i> 项目管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% block nav_module %}{% endblock %}" href="{% url 'module_list' %}">
-                            <i class="bi bi-diagram-3"></i> 模块管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% block nav_config %}{% endblock %}" href="{% url 'config_list' %}">
-                            <i class="bi bi-gear"></i> 配置管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% block nav_testcase %}{% endblock %}" href="{% url 'testcase_list' %}">
-                            <i class="bi bi-list-check"></i> 用例管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% block nav_ddt %}{% endblock %}" href="{% url 'ddt_list' %}">
-                            <i class="bi bi-database"></i> 数据源
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% block nav_scene %}{% endblock %}" href="{% url 'scene_list' %}">
-                            <i class="bi bi-diagram-2"></i> 场景编排
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% block nav_task %}{% endblock %}" href="{% url 'task_list' %}">
-                            <i class="bi bi-play-circle"></i> 执行与调度
-                        </a>
-                    </li>
-                </ul>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house"></i></a></li>
+                    {% block breadcrumb %}{% endblock %}
+                </ol>
+            </nav>
+        </header>
+
+        <!-- Content -->
+        <div class="content-wrapper">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal fade modal-confirm" id="deleteConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title w-100 text-center">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                    <h5>确认删除？</h5>
+                    <p>即将删除 <strong id="deleteItemName"></strong>，此操作不可恢复。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="deleteConfirmBtn">
+                        <i class="bi bi-trash"></i> 确认删除
+                    </button>
+                </div>
             </div>
         </div>
-    </nav>
-
-    <!-- 主内容 -->
-    <div class="container-fluid mt-3">
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-        {% endif %}
-
-        {% block content %}{% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

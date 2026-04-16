@@ -3,17 +3,22 @@
 {% block title %}{% if module %}编辑模块{% else %}新增模块{% endif %} - Pytest 测试平台{% endblock %}
 {% block nav_module %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'module_list' %}">模块管理</a></li>
+<li class="breadcrumb-item active">{% if module %}编辑模块{% else %}新增模块{% endif %}</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col">
-        <h4><i class="bi bi-diagram-3"></i> {% if module %}编辑模块{% else %}新增模块{% endif %}</h4>
-    </div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-diagram-3"></i> {% if module %}编辑模块{% else %}新增模块{% endif %}</h4>
 </div>
 
 <div class="card">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
+    <div class="card-header">{% if module %}编辑模块{% else %}新增模块{% endif %}</div>
+    <form method="post" id="module-form">
+        {% csrf_token %}
+        <div class="card-body">
             <div class="mb-3">
                 <label for="project" class="form-label">所属项目 <span class="text-danger">*</span></label>
                 <select class="form-select" id="project" name="project" required>
@@ -32,11 +37,11 @@
                 <label for="description" class="form-label">模块描述</label>
                 <textarea class="form-control" id="description" name="description" rows="3">{% if form_data %}{{ form_data.description }}{% elif module %}{{ module.description }}{% endif %}</textarea>
             </div>
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
-                <a href="{% url 'module_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+            <a href="{% url 'module_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
+        </div>
+    </form>
 </div>
 {% endblock %}

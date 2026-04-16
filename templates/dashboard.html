@@ -2,106 +2,270 @@
 
 {% block title %}首页概览 - Pytest 测试平台{% endblock %}
 {% block nav_dashboard %}active{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">首页概览</li>{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col"><h4><i class="bi bi-speedometer2"></i> 首页概览</h4></div>
+<div class="page-header">
+    <h4><i class="bi bi-speedometer2"></i> 首页概览</h4>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-2">
+<!-- 核心统计卡片 -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
         <div class="card stat-card">
-            <div class="stat-number">{{ project_count }}</div>
-            <div class="stat-label">项目总数</div>
+            <div class="stat-icon stat-bg-primary"><i class="bi bi-folder"></i></div>
+            <div class="stat-info">
+                <div class="stat-number">{{ project_count }}</div>
+                <div class="stat-label">项目总数</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-md-3">
         <div class="card stat-card">
-            <div class="stat-number">{{ module_count }}</div>
-            <div class="stat-label">模块总数</div>
+            <div class="stat-icon stat-bg-success"><i class="bi bi-list-check"></i></div>
+            <div class="stat-info">
+                <div class="stat-number">{{ testcase_count }}</div>
+                <div class="stat-label">用例总数</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-md-3">
         <div class="card stat-card">
-            <div class="stat-number">{{ config_count }}</div>
-            <div class="stat-label">配置总数</div>
+            <div class="stat-icon stat-bg-success"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-number text-success">{{ week_passed }}</div>
+                <div class="stat-label">7天通过</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-md-3">
         <div class="card stat-card">
-            <div class="stat-number">{{ testcase_count }}</div>
-            <div class="stat-label">用例总数</div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number">{{ scene_count }}</div>
-            <div class="stat-label">场景总数</div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number">{{ task_count }}</div>
-            <div class="stat-label">任务总数</div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number">{{ ddt_count }}</div>
-            <div class="stat-label">数据源</div>
+            <div class="stat-icon {% if week_pass_rate >= 80 %}stat-bg-success{% elif week_pass_rate >= 50 %}stat-bg-warning{% else %}stat-bg-danger{% endif %}">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number {% if week_pass_rate >= 80 %}text-success{% elif week_pass_rate >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ week_pass_rate }}%</div>
+                <div class="stat-label">7天通过率</div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-4">
+<!-- 最近7天执行趋势图 + 统计明细 -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
         <div class="card">
-            <div class="card-header">快捷操作</div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bar-chart"></i> 最近7天执行趋势</span>
+                <span class="text-muted" style="font-size:.75rem;">共 {{ week_total }} 条用例</span>
+            </div>
             <div class="card-body">
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="{% url 'project_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> 新增项目</a>
-                    <a href="{% url 'module_create' %}" class="btn btn-outline-primary"><i class="bi bi-plus-lg"></i> 新增模块</a>
-                    <a href="{% url 'config_create' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-lg"></i> 新增配置</a>
-                    <a href="{% url 'testcase_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-lg"></i> 新增用例</a>
-                    <a href="{% url 'ddt_create' %}" class="btn btn-outline-info"><i class="bi bi-plus-lg"></i> 新增数据源</a>
-                    <a href="{% url 'scene_create' %}" class="btn btn-outline-dark"><i class="bi bi-plus-lg"></i> 新增场景</a>
-                    <a href="{% url 'task_create' %}" class="btn btn-outline-warning"><i class="bi bi-play-fill"></i> 新建任务</a>
-                </div>
+                <canvas id="trendChart" height="260"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">最近更新的项目</div>
-            <div class="card-body">
-                {% for project in recent_projects %}
-                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                    <a href="{% url 'project_update' project.pk %}">{{ project.name }}</a>
-                    <small class="text-muted">{{ project.updated_at|date:"Y-m-d H:i" }}</small>
+    <div class="col-lg-4">
+        <div class="card" style="height:100%">
+            <div class="card-header"><i class="bi bi-pie-chart"></i> 7天执行概览</div>
+            <div class="card-body d-flex flex-column justify-content-center">
+                <div class="text-center mb-3">
+                    <div style="font-size:2.5rem;font-weight:700;color:var(--primary);">{{ week_total }}</div>
+                    <div class="text-muted">用例总数</div>
                 </div>
-                {% empty %}
-                <p class="text-muted mb-0">暂无项目</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">最近更新的用例</div>
-            <div class="card-body">
-                {% for tc in recent_testcases %}
-                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                    <div>
-                        <span class="badge {% if tc.method == 'GET' %}bg-success{% elif tc.method == 'POST' %}bg-primary{% elif tc.method == 'PUT' %}bg-warning{% elif tc.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %} me-1">{{ tc.method }}</span>
-                        <a href="{% url 'testcase_update' tc.pk %}">{{ tc.name }}</a>
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <div style="font-size:1.5rem;font-weight:700;color:var(--success);">{{ week_passed }}</div>
+                        <div class="text-muted" style="font-size:.8rem;">通过</div>
                     </div>
-                    <small class="text-muted">{{ tc.updated_at|date:"m-d H:i" }}</small>
+                    <div class="col-4">
+                        <div style="font-size:1.5rem;font-weight:700;color:var(--danger);">{{ week_failed }}</div>
+                        <div class="text-muted" style="font-size:.8rem;">失败</div>
+                    </div>
+                    <div class="col-4">
+                        <div style="font-size:1.5rem;font-weight:700;color:var(--warning);">{{ week_error }}</div>
+                        <div class="text-muted" style="font-size:.8rem;">错误</div>
+                    </div>
+                </div>
+                <hr>
+                <div class="progress" style="height:1.25rem;">
+                    {% if week_total > 0 %}
+                    <div class="progress-bar bg-success" style="width:{% widthratio week_passed week_total 100 %}%">{{ week_passed }}</div>
+                    <div class="progress-bar bg-danger" style="width:{% widthratio week_failed week_total 100 %}%">{{ week_failed }}</div>
+                    <div class="progress-bar bg-warning" style="width:{% widthratio week_error week_total 100 %}%">{{ week_error }}</div>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between mt-1" style="font-size:.7rem;color:var(--text-muted);">
+                    <span><span style="color:var(--success);">■</span> 通过</span>
+                    <span><span style="color:var(--danger);">■</span> 失败</span>
+                    <span><span style="color:var(--warning);">■</span> 错误</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快捷操作 + 最近报告 -->
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card" style="height:100%">
+            <div class="card-header"><i class="bi bi-lightning"></i> 快捷操作</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{% url 'testcase_create' %}" class="quick-action-card d-block">
+                            <i class="bi bi-list-check" style="color:var(--success)"></i>
+                            <span>新增用例</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'task_create' %}" class="quick-action-card d-block">
+                            <i class="bi bi-play-circle" style="color:var(--warning)"></i>
+                            <span>新建任务</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'scene_create' %}" class="quick-action-card d-block">
+                            <i class="bi bi-diagram-2" style="color:var(--orange)"></i>
+                            <span>新增场景</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'project_create' %}" class="quick-action-card d-block">
+                            <i class="bi bi-folder-plus" style="color:var(--primary)"></i>
+                            <span>新增项目</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-bar-graph"></i> 最近测试报告</span>
+                <a href="{% url 'report_list' %}" class="btn btn-sm btn-outline-primary">查看全部</a>
+            </div>
+            <div class="card-body p-0">
+                {% for r in recent_results %}
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        {% if r.total_cases > 0 and r.failed == 0 and r.error == 0 %}
+                        <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
+                        {% else %}
+                        <span class="badge bg-danger"><i class="bi bi-x-lg"></i></span>
+                        {% endif %}
+                        <a href="{% url 'report_detail' r.pk %}">{{ r.task.task_name|truncatechars:30 }}</a>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        {% if r.total_cases > 0 %}
+                        <span style="font-size:.8rem;">
+                            <span class="text-success fw-bold">{{ r.passed }}</span>
+                            <span class="text-muted">/</span>
+                            <span class="text-danger fw-bold">{{ r.failed }}</span>
+                            <span class="text-muted">/</span>
+                            <span>{{ r.total_cases }}</span>
+                        </span>
+                        {% endif %}
+                        <small class="text-muted" style="white-space:nowrap;">{{ r.executed_at|date:"m-d H:i" }}</small>
+                    </div>
                 </div>
                 {% empty %}
-                <p class="text-muted mb-0">暂无用例</p>
+                <div class="empty-state py-4">
+                    <i class="bi bi-inbox"></i>
+                    <p>暂无测试报告</p>
+                    <a href="{% url 'task_create' %}" class="btn btn-sm btn-primary">创建执行任务</a>
+                </div>
                 {% endfor %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    var dailyStats = {{ daily_stats_json|safe }};
+    var labels = dailyStats.map(function(d) { return d.date; });
+    var passedData = dailyStats.map(function(d) { return d.passed; });
+    var failedData = dailyStats.map(function(d) { return d.failed; });
+    var errorData = dailyStats.map(function(d) { return d.error; });
+
+    var ctx = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '通过',
+                    data: passedData,
+                    backgroundColor: 'rgba(34, 197, 94, 0.85)',
+                    borderRadius: 3,
+                    borderSkipped: false,
+                },
+                {
+                    label: '失败',
+                    data: failedData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                    borderRadius: 3,
+                    borderSkipped: false,
+                },
+                {
+                    label: '错误',
+                    data: errorData,
+                    backgroundColor: 'rgba(245, 158, 11, 0.85)',
+                    borderRadius: 3,
+                    borderSkipped: false,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'rectRounded',
+                        padding: 16,
+                        font: { size: 12 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(context) {
+                            var idx = context[0].dataIndex;
+                            var d = dailyStats[idx];
+                            var total = d.passed + d.failed + d.error;
+                            var rate = total > 0 ? Math.round(d.passed / total * 100) : 0;
+                            return '通过率: ' + rate + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        font: { size: 11 }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,.06)'
+                    }
+                }
+            }
+        }
+    });
+})();
+</script>
 {% endblock %}

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
 from ..models import Project
 
 
@@ -10,8 +11,11 @@ def project_list(request):
     if search:
         projects = projects.filter(name__icontains=search)
     projects = projects.prefetch_related('modules')
+    paginator = Paginator(projects, 15)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
     return render(request, 'project/list.html', {
-        'projects': projects,
+        'page_obj': page_obj,
         'search': search,
         'nav_project': 'active',
     })

@@ -3,15 +3,22 @@
 {% block title %}{% if source %}编辑数据源{% else %}新增数据源{% endif %} - Pytest 测试平台{% endblock %}
 {% block nav_ddt %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'ddt_list' %}">数据源</a></li>
+<li class="breadcrumb-item active">{% if source %}编辑数据源{% else %}新增数据源{% endif %}</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col"><h4><i class="bi bi-database"></i> {% if source %}编辑数据源{% else %}新增数据源{% endif %}</h4></div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-database"></i> {% if source %}编辑数据源{% else %}新增数据源{% endif %}</h4>
 </div>
 
 <div class="card">
-    <div class="card-body">
-        <form method="post" id="ddt-form">
-            {% csrf_token %}
+    <div class="card-header">{% if source %}编辑数据源{% else %}新增数据源{% endif %}</div>
+    <form method="post" id="ddt-form" data-json-format="true">
+        {% csrf_token %}
+        <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -51,19 +58,22 @@
 
             <div class="mb-3" id="content-group">
                 <label class="form-label">数据内容</label>
-                <textarea class="form-control font-monospace" name="content" rows="12" id="content-editor">{% if form_data %}{{ form_data.content }}{% elif source %}{{ source.content }}{% else %}[
+                <div class="json-field-toolbar">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('content-editor')"><i class="bi bi-code-slash"></i> 格式化</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('content-editor')"><i class="bi bi-check-circle"></i> 验证</button>
+                </div>
+                <textarea class="form-control font-monospace" name="content" id="content-editor" data-json="true" rows="12">{% if form_data %}{{ form_data.content }}{% elif source %}{{ source.content }}{% else %}[
   {"username": "admin", "password": "123456"},
   {"username": "user1", "password": "pass1"}
 ]{% endif %}</textarea>
                 <small class="text-muted" id="content-hint">JSON 数组格式，每个对象为一组测试参数</small>
             </div>
-
-            <div class="d-flex gap-2 mt-3">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
-                <a href="{% url 'ddt_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+            <a href="{% url 'ddt_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
+        </div>
+    </form>
 </div>
 {% endblock %}
 

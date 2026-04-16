@@ -4,19 +4,18 @@
 {% block title %}场景编排 - {{ scene.name }} - Pytest 测试平台{% endblock %}
 {% block nav_scene %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'scene_list' %}">场景编排</a></li>
+<li class="breadcrumb-item active">{{ scene.name }}</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col">
-        <h4>
-            <i class="bi bi-diagram-2"></i> 场景编排
-            <small class="text-muted ms-2">{{ scene.name }}</small>
-        </h4>
-    </div>
-    <div class="col-auto">
-        <a href="{% url 'scene_list' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> 返回列表
-        </a>
-    </div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-diagram-2"></i> 场景编排 <small class="text-muted ms-2">{{ scene.name }}</small></h4>
+    <a href="{% url 'scene_list' %}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> 返回列表
+    </a>
 </div>
 
 <div class="row">
@@ -35,10 +34,8 @@
                          data-case-id="{{ sc.pk }}"
                          data-order="{{ sc.order_index }}">
                         <span class="badge bg-secondary me-2 order-badge">{{ sc.order_index }}</span>
-                        <i class="bi bi-grip-vertical text-muted me-2" style="cursor:grab;"></i>
-                        <span class="badge {% if sc.testcase.method == 'GET' %}bg-success{% elif sc.testcase.method == 'POST' %}bg-primary{% elif sc.testcase.method == 'PUT' %}bg-warning{% elif sc.testcase.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %} me-2">
-                            {{ sc.testcase.method }}
-                        </span>
+                        <i class="bi bi-grip-vertical me-2 drag-handle"></i>
+                        <span class="badge badge-method-{{ sc.testcase.method|lower }} me-2">{{ sc.testcase.method }}</span>
                         <span class="me-2">{{ sc.testcase.name }}</span>
                         <small class="text-muted me-2">{{ sc.testcase.module.name }}</small>
                         {% if sc.testcase.extractors and sc.testcase.extractors|lookup:"0" %}
@@ -51,9 +48,10 @@
                         </div>
                     </div>
                     {% empty %}
-                    <div class="text-center text-muted py-4" id="empty-hint">
-                        <i class="bi bi-inbox" style="font-size:2rem;"></i>
-                        <p class="mb-0 mt-2">暂无用例，请从右侧添加</p>
+                    <div class="empty-state" id="empty-hint">
+                        <i class="bi bi-inbox"></i>
+                        <p>暂无用例</p>
+                        <p class="small">请从右侧添加</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -65,9 +63,7 @@
             <div class="card-header"><i class="bi bi-share"></i> 执行链路</div>
             <div class="card-body" id="chain-view">
                 {% for sc in scene_cases %}
-                <span class="badge {% if sc.testcase.method == 'GET' %}bg-success{% elif sc.testcase.method == 'POST' %}bg-primary{% elif sc.testcase.method == 'PUT' %}bg-warning{% elif sc.testcase.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %} chain-node">
-                    {{ sc.testcase.name }}
-                </span>
+                <span class="badge badge-method-{{ sc.testcase.method|lower }} chain-node">{{ sc.testcase.name }}</span>
                 {% if not forloop.last %}
                 <i class="bi bi-arrow-right mx-1 text-muted"></i>
                 {% endif %}
@@ -97,7 +93,7 @@
                 <div id="available-testcases" style="max-height:320px;overflow-y:auto;">
                     {% for tc in available_testcases %}
                     <div class="d-flex align-items-center border-bottom py-1 available-tc-item" data-tc-id="{{ tc.pk }}" data-project-id="{{ tc.module.project.pk }}">
-                        <span class="badge {% if tc.method == 'GET' %}bg-success{% elif tc.method == 'POST' %}bg-primary{% elif tc.method == 'PUT' %}bg-warning{% elif tc.method == 'DELETE' %}bg-danger{% else %}bg-info{% endif %} me-1" style="font-size:0.7rem;">{{ tc.method }}</span>
+                        <span class="badge badge-method-{{ tc.method|lower }} me-1" style="font-size:0.7rem;">{{ tc.method }}</span>
                         <small class="me-1 text-truncate" style="max-width:140px;">{{ tc.name }}</small>
                         <small class="text-muted me-1">{{ tc.module.name }}</small>
                         <button class="btn btn-sm btn-outline-primary btn-add-case ms-auto py-0" data-tc-id="{{ tc.pk }}" title="添加">
@@ -105,7 +101,10 @@
                         </button>
                     </div>
                     {% empty %}
-                    <p class="text-muted small mb-0">无可添加用例</p>
+                    <div class="empty-state py-3">
+                        <i class="bi bi-inbox" style="font-size:1.5rem;"></i>
+                        <p class="small mb-0">无可添加用例</p>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
@@ -142,7 +141,7 @@
 
     function handleDragStart(e) {
         dragSrcEl = this;
-        this.style.opacity = "0.4";
+        this.classList.add("dragging");
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", this.dataset.caseId);
     }
@@ -182,7 +181,7 @@
     }
 
     function handleDragEnd(e) {
-        this.style.opacity = "1";
+        this.classList.remove("dragging");
         caseList.querySelectorAll(".scene-case-item").forEach(function(item) {
             item.classList.remove("bg-light");
         });
@@ -222,7 +221,7 @@
         if (!btn) return;
         var caseId = btn.dataset.caseId;
         if (!confirm("确认移除该用例？")) return;
-        fetch("/scenes/" + sceneId + "/cases/" + caseId + "/remove/", {
+        fetch("/scenes/" + sceneId + "/remove-case/" + caseId + "/", {
             method: "POST",
             headers: {"X-CSRFToken": getCookie("csrftoken")}
         }).then(function(r) { return r.json(); }).then(function(data) {
@@ -285,7 +284,7 @@
         var hint = document.getElementById("empty-hint");
         var items = caseList.querySelectorAll(".scene-case-item");
         if (items.length === 0 && !hint) {
-            caseList.innerHTML = '<div class="text-center text-muted py-4" id="empty-hint"><i class="bi bi-inbox" style="font-size:2rem;"></i><p class="mb-0 mt-2">暂无用例，请从右侧添加</p></div>';
+            caseList.innerHTML = '<div class="empty-state" id="empty-hint"><i class="bi bi-inbox"></i><p>暂无用例</p><p class="small">请从右侧添加</p></div>';
         }
     }
 
@@ -300,13 +299,14 @@
         items.forEach(function(item, idx) {
             var name = item.querySelector("span.me-2:nth-child(4)") ?
                 item.querySelectorAll("span")[3].textContent.trim() : "";
-            var methodBadge = item.querySelector(".badge.bg-success, .badge.bg-primary, .badge.bg-warning, .badge.bg-danger, .badge.bg-info");
+            var methodBadge = item.querySelector("[class*='badge-method-']");
             var method = methodBadge ? methodBadge.textContent.trim() : "";
-            var cls = "bg-info";
-            if (method === "GET") cls = "bg-success";
-            else if (method === "POST") cls = "bg-primary";
-            else if (method === "PUT") cls = "bg-warning";
-            else if (method === "DELETE") cls = "bg-danger";
+            var cls = "badge-method-info";
+            if (method === "GET") cls = "badge-method-get";
+            else if (method === "POST") cls = "badge-method-post";
+            else if (method === "PUT") cls = "badge-method-put";
+            else if (method === "DELETE") cls = "badge-method-delete";
+            else if (method === "PATCH") cls = "badge-method-patch";
             html += '<span class="badge ' + cls + ' chain-node">' + name + '</span>';
             if (idx < items.length - 1) {
                 html += ' <i class="bi bi-arrow-right mx-1 text-muted"></i> ';

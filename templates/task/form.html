@@ -3,21 +3,36 @@
 {% block title %}新建任务 - Pytest 测试平台{% endblock %}
 {% block nav_task %}active{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'task_list' %}">执行与调度</a></li>
+<li class="breadcrumb-item active">新建任务</li>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-3">
-    <div class="col"><h4><i class="bi bi-play-circle"></i> 新建任务</h4></div>
+<!-- Page Header -->
+<div class="page-header">
+    <h4><i class="bi bi-play-circle"></i> 新建任务</h4>
 </div>
 
 <div class="card">
-    <div class="card-body">
-        <form method="post" id="task-form">
-            {% csrf_token %}
+    <div class="card-header">新建任务</div>
+    <form method="post" id="task-form">
+        {% csrf_token %}
+        <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">任务名称 <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="task_name"
                                value="{% if form_data %}{{ form_data.task_name }}{% endif %}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">执行方式</label>
+                        <select class="form-select" name="task_type" id="task-type-select">
+                            <option value="SYNC">同步执行</option>
+                            <option value="ASYNC">异步执行 (Celery)</option>
+                            <option value="SCHEDULE">定时任务 (Crontab)</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">执行范围</label>
@@ -28,6 +43,8 @@
                             <option value="SCENE">场景</option>
                         </select>
                     </div>
+                </div>
+                <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">执行环境</label>
                         <select class="form-select" name="execute_env">
@@ -36,8 +53,6 @@
                             <option value="PROD">生产环境</option>
                         </select>
                     </div>
-                </div>
-                <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">报告名称</label>
                         <input type="text" class="form-control" name="report_name"
@@ -49,6 +64,43 @@
                         <input type="text" class="form-control" name="created_by"
                                value="{% if form_data %}{{ form_data.created_by }}{% endif %}">
                     </div>
+                </div>
+            </div>
+
+            <!-- 定时任务配置（仅 SCHEDULE 类型显示） -->
+            <div id="schedule-config" style="display:none">
+                <hr>
+                <h6><i class="bi bi-clock"></i> 定时任务配置</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Cron 表达式 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="cron_expression" id="cron-input"
+                                   value="{% if form_data %}{{ form_data.cron_expression }}{% endif %}"
+                                   placeholder="分 时 日 月 周，如: 0 8 * * 1-5">
+                            <div class="form-text">
+                                格式: 分 时 日 月 周 &nbsp;
+                                <span id="cron-desc" class="text-primary"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">常用示例</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 8 * * 1-5">工作日早8点</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 9 * * *">每天早9点</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="*/30 * * * *">每30分钟</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 */2 * * *">每2小时</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 0 * * 1">每周一零点</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 10 1 * *">每月1号10点</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="email_notify" id="email-notify">
+                    <label class="form-check-label" for="email-notify">执行完成后邮件通知</label>
                 </div>
             </div>
 
@@ -134,18 +186,67 @@
                     </select>
                 </div>
             </div>
-
-            <div class="d-flex gap-2 mt-3">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 创建</button>
-                <a href="{% url 'task_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 创建</button>
+            <a href="{% url 'task_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
+        </div>
+    </form>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// 执行方式切换
+function toggleTaskType() {
+    var taskType = $('#task-type-select').val();
+    if (taskType === 'SCHEDULE') {
+        $('#schedule-config').show();
+    } else {
+        $('#schedule-config').hide();
+    }
+}
+$('#task-type-select').change(toggleTaskType);
+toggleTaskType();
+
+// Cron 预设按钮
+$('.cron-preset').click(function() {
+    var cron = $(this).data('cron');
+    $('#cron-input').val(cron);
+    describeCron(cron);
+});
+
+// Cron 描述
+function describeCron(cron) {
+    var parts = cron.trim().split(/\s+/);
+    if (parts.length !== 5) { $('#cron-desc').text(''); return; }
+    var desc = [];
+    var min = parts[0], hour = parts[1], day = parts[2], month = parts[3], dow = parts[4];
+
+    if (min.startsWith('*/')) desc.push('每' + min.slice(2) + '分钟');
+    else if (hour.startsWith('*/')) desc.push('每' + hour.slice(2) + '小时');
+    else if (min !== '*') desc.push(min + '分');
+
+    if (hour !== '*' && !hour.startsWith('*/')) desc.push(hour + '时');
+    if (day !== '*') desc.push(day + '日');
+    if (month !== '*') desc.push(month + '月');
+
+    var dowMap = {'0':'周日','1':'周一','2':'周二','3':'周三','4':'周四','5':'周五','6':'周六','7':'周日'};
+    if (dow !== '*') {
+        if (dow.includes('-')) {
+            var r = dow.split('-');
+            desc.push((dowMap[r[0]]||r[0]) + '到' + (dowMap[r[1]]||r[1]));
+        } else {
+            desc.push(dowMap[dow] || dow);
+        }
+    }
+
+    $('#cron-desc').text(desc.length ? '→ ' + desc.join(' ') : '');
+}
+
+$('#cron-input').on('input', function() { describeCron($(this).val()); });
+
+// 执行范围切换
 function toggleScope() {
     var scope = $('#scope-select').val();
     $('.scope-group').hide();

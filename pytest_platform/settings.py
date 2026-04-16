@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
     'api',
 ]
 
@@ -123,3 +124,33 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Celery 配置
+# ---- Broker 配置 ----
+# 使用 Redis 作为消息中间件
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+
+# ---- Result Backend 配置 ----
+# 使用 Redis 存储任务结果
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1'
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Shanghai'
+CELERY_ENABLE_UTC = True
+
+# Celery Beat 定时任务调度
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# 任务执行超时
+CELERY_TASK_SOFT_TIME_LIMIT = 600  # 10分钟软超时
+CELERY_TASK_TIME_LIMIT = 900  # 15分钟硬超时
+
+# Caches - 使用 Redis 缓存
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/2',
+    }
+}
