@@ -9,221 +9,210 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-list-check"></i> {% if testcase %}编辑用例{% else %}新增用例{% endif %}</h4>
-</div>
+<div class="form-dashboard">
+    <section class="form-hero">
+        <div class="form-hero-copy">
+            <p class="command-eyebrow">Testcase Configuration</p>
+            <h4>编辑面板</h4>
+            <p>统一配置基本信息、请求参数、提取器和断言规则，保留现有数据结构与 JSON 编辑方式。</p>
+        </div>
+    </section>
 
-<div class="card">
-    <div class="card-header">{% if testcase %}编辑用例{% else %}新增用例{% endif %}</div>
-    <form method="post" id="testcase-form" data-json-format="true">
-        {% csrf_token %}
-        <div class="card-body">
-            <ul class="nav nav-tabs mb-3" role="tablist">
-                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-basic" type="button">基本信息</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-request" type="button">请求配置</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-extract" type="button">提取器</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-assert" type="button">断言</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-hooks" type="button">Hooks</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ddt" type="button">参数化</button></li>
-            </ul>
+    <section class="card form-shell-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">配置标签</span>
+                <strong>{% if testcase %}编辑用例{% else %}新增用例{% endif %}</strong>
+            </div>
+        </div>
+        <form method="post" id="testcase-form" data-json-format="true">
+            {% csrf_token %}
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3 form-nav-tabs" role="tablist">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-basic" type="button">基本信息</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-request" type="button">请求配置</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-extract" type="button">提取器</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-assert" type="button">断言</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-hooks" type="button">Hooks</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ddt" type="button">参数化</button></li>
+                </ul>
 
-            <div class="tab-content">
-                <!-- ===== 基本信息 ===== -->
-                <div class="tab-pane fade show active" id="tab-basic">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">所属项目 <span class="text-danger">*</span></label>
-                                <select class="form-select" id="project-select">
-                                    <option value="">请选择项目</option>
-                                    {% for p in projects %}
-                                    <option value="{{ p.pk }}" {% if testcase and testcase.module.project.pk == p.pk %}selected{% elif form_data and form_data.project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
-                                    {% endfor %}
-                                </select>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tab-basic">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">所属项目 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="project-select">
+                                        <option value="">请选择项目</option>
+                                        {% for p in projects %}
+                                        <option value="{{ p.pk }}" {% if testcase and testcase.module.project.pk == p.pk %}selected{% elif form_data and form_data.project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">所属模块 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="module" name="module" required>
+                                        <option value="">请先选择项目</option>
+                                        {% for m in modules %}
+                                        <option value="{{ m.pk }}" data-project="{{ m.project.pk }}"
+                                                {% if testcase and testcase.module.pk == m.pk %}selected{% elif form_data and form_data.module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">用例名称 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name"
+                                           value="{% if form_data %}{{ form_data.name }}{% elif testcase %}{{ testcase.name }}{% endif %}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">创建人</label>
+                                    <input type="text" class="form-control" name="created_by"
+                                           value="{% if form_data %}{{ form_data.created_by }}{% elif testcase %}{{ testcase.created_by }}{% endif %}">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">所属模块 <span class="text-danger">*</span></label>
-                                <select class="form-select" id="module" name="module" required>
-                                    <option value="">请先选择项目</option>
-                                    {% for m in modules %}
-                                    <option value="{{ m.pk }}" data-project="{{ m.project.pk }}"
-                                            {% if testcase and testcase.module.pk == m.pk %}selected{% elif form_data and form_data.module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">用例名称 <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="name"
-                                       value="{% if form_data %}{{ form_data.name }}{% elif testcase %}{{ testcase.name }}{% endif %}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">创建人</label>
-                                <input type="text" class="form-control" name="created_by"
-                                       value="{% if form_data %}{{ form_data.created_by }}{% elif testcase %}{{ testcase.created_by }}{% endif %}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">请求方法 <span class="text-danger">*</span></label>
-                                <select class="form-select" name="method" id="method-select">
-                                    {% for val, label in method_choices %}
-                                    <option value="{{ val }}" {% if form_data and form_data.method == val %}selected{% elif testcase and testcase.method == val %}selected{% elif not testcase and val == 'GET' %}selected{% endif %}>{{ label }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">请求URL <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text" id="method-badge">GET</span>
-                                    <input type="text" class="form-control" name="url" placeholder="https://api.example.com/users"
-                                           value="{% if form_data %}{{ form_data.url }}{% elif testcase %}{{ testcase.url }}{% endif %}" required>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">请求方法 <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="method" id="method-select">
+                                        {% for val, label in method_choices %}
+                                        <option value="{{ val }}" {% if form_data and form_data.method == val %}selected{% elif testcase and testcase.method == val %}selected{% elif not testcase and val == 'GET' %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">请求URL <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="method-badge">GET</span>
+                                        <input type="text" class="form-control" name="url" placeholder="https://api.example.com/users"
+                                               value="{% if form_data %}{{ form_data.url }}{% elif testcase %}{{ testcase.url }}{% endif %}" required>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- ===== 请求配置 ===== -->
-                <div class="tab-pane fade" id="tab-request">
-                    <div class="mb-3">
-                        <label class="form-label">请求头 Headers (JSON)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_headers')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_headers')"><i class="bi bi-check-circle"></i> 验证</button>
+                    <div class="tab-pane fade" id="tab-request">
+                        <div class="mb-3">
+                            <label class="form-label">请求头 Headers (JSON)</label>
+                            <div class="json-field-toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_headers')"><i class="bi bi-code-slash"></i> 格式化</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_headers')"><i class="bi bi-check-circle"></i> 验证</button>
+                            </div>
+                            <textarea class="form-control font-monospace" name="headers" id="id_headers" data-json="true" rows="8">{% if form_data %}{{ form_data.headers }}{% elif testcase %}{{ testcase.headers|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                            <small class="text-muted">例: {"Content-Type": "application/json", "Authorization": "Bearer $token"}</small>
                         </div>
-                        <textarea class="form-control font-monospace" name="headers" id="id_headers" data-json="true" rows="8">{% if form_data %}{{ form_data.headers }}{% elif testcase %}{{ testcase.headers|default:"{}" }}{% else %}{}{% endif %}</textarea>
-                        <small class="text-muted">例: {"Content-Type": "application/json", "Authorization": "Bearer $token"}</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">查询参数 Params (JSON)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_params')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_params')"><i class="bi bi-check-circle"></i> 验证</button>
+                        <div class="mb-3">
+                            <label class="form-label">查询参数 Params (JSON)</label>
+                            <div class="json-field-toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_params')"><i class="bi bi-code-slash"></i> 格式化</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_params')"><i class="bi bi-check-circle"></i> 验证</button>
+                            </div>
+                            <textarea class="form-control font-monospace" name="params" id="id_params" data-json="true" rows="6">{% if form_data %}{{ form_data.params }}{% elif testcase %}{{ testcase.params|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                            <small class="text-muted">例: {"page": 1, "size": 20}</small>
                         </div>
-                        <textarea class="form-control font-monospace" name="params" id="id_params" data-json="true" rows="6">{% if form_data %}{{ form_data.params }}{% elif testcase %}{{ testcase.params|default:"{}" }}{% else %}{}{% endif %}</textarea>
-                        <small class="text-muted">例: {"page": 1, "size": 20}</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">请求体 Body (JSON)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_body')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_body')"><i class="bi bi-check-circle"></i> 验证</button>
+                        <div class="mb-3">
+                            <label class="form-label">请求体 Body (JSON)</label>
+                            <div class="json-field-toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_body')"><i class="bi bi-code-slash"></i> 格式化</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_body')"><i class="bi bi-check-circle"></i> 验证</button>
+                            </div>
+                            <textarea class="form-control font-monospace" name="body" id="id_body" data-json="true" rows="8">{% if form_data %}{{ form_data.body }}{% elif testcase %}{{ testcase.body|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                            <small class="text-muted">例: {"username": "admin", "password": "123456"}</small>
                         </div>
-                        <textarea class="form-control font-monospace" name="body" id="id_body" data-json="true" rows="8">{% if form_data %}{{ form_data.body }}{% elif testcase %}{{ testcase.body|default:"{}" }}{% else %}{}{% endif %}</textarea>
-                        <small class="text-muted">例: {"username": "admin", "password": "123456"}</small>
                     </div>
-                </div>
 
-                <!-- ===== 提取器 ===== -->
-                <div class="tab-pane fade" id="tab-extract">
-                    <div class="mb-3">
-                        <label class="form-label">提取器 Extractors (JSON)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('extractors-editor')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('extractors-editor')"><i class="bi bi-check-circle"></i> 验证</button>
+                    <div class="tab-pane fade" id="tab-extract">
+                        <div class="mb-3">
+                            <label class="form-label">提取器 Extractors (JSON)</label>
+                            <div class="json-field-toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('extractors-editor')"><i class="bi bi-code-slash"></i> 格式化</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('extractors-editor')"><i class="bi bi-check-circle"></i> 验证</button>
+                            </div>
+                            <textarea class="form-control font-monospace" name="extractors" id="extractors-editor" data-json="true" rows="10">{% if form_data %}{{ form_data.extractors }}{% elif testcase %}{{ testcase.extractors|default:"{}" }}{% else %}{}{% endif %}</textarea>
                         </div>
-                        <textarea class="form-control font-monospace" name="extractors" id="extractors-editor" data-json="true" rows="10">{% if form_data %}{{ form_data.extractors }}{% elif testcase %}{{ testcase.extractors|default:"{}" }}{% else %}{}{% endif %}</textarea>
-                        <small class="text-muted">
-                            从响应中提取变量，供后续用例使用。示例：<br>
-                            {<br>
-                            &nbsp;&nbsp;"token": {"type": "jsonpath", "path": "$.data.token"},<br>
-                            &nbsp;&nbsp;"user_id": {"type": "regex", "pattern": "id=(\\d+)"}<br>
-                            }
-                        </small>
                     </div>
-                </div>
 
-                <!-- ===== 断言 ===== -->
-                <div class="tab-pane fade" id="tab-assert">
-                    <div class="mb-3">
-                        <label class="form-label">断言 Assertions (JSON Array)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('assertions-editor')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('assertions-editor')"><i class="bi bi-check-circle"></i> 验证</button>
+                    <div class="tab-pane fade" id="tab-assert">
+                        <div class="mb-3">
+                            <label class="form-label">断言 Assertions (JSON Array)</label>
+                            <div class="json-field-toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('assertions-editor')"><i class="bi bi-code-slash"></i> 格式化</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('assertions-editor')"><i class="bi bi-check-circle"></i> 验证</button>
+                            </div>
+                            <textarea class="form-control font-monospace" name="assertions" id="assertions-editor" data-json="true" rows="10">{% if form_data %}{{ form_data.assertions }}{% elif testcase %}{{ testcase.assertions|default:"[]" }}{% else %}[]{% endif %}</textarea>
                         </div>
-                        <textarea class="form-control font-monospace" name="assertions" id="assertions-editor" data-json="true" rows="10">{% if form_data %}{{ form_data.assertions }}{% elif testcase %}{{ testcase.assertions|default:"[]" }}{% else %}[]{% endif %}</textarea>
-                        <small class="text-muted">
-                            验证响应是否符合预期。示例：<br>
-                            [<br>
-                            &nbsp;&nbsp;{"type": "status_code", "expected": 200},<br>
-                            &nbsp;&nbsp;{"type": "jsonpath", "path": "$.code", "operator": "eq", "expected": 0},<br>
-                            &nbsp;&nbsp;{"type": "jsonpath", "path": "$.data.name", "operator": "contains", "expected": "test"}<br>
-                            ]<br>
-                            支持的 operator: eq / not_eq / contains / not_contains / gt / lt / gte / lte / regex
-                        </small>
                     </div>
-                </div>
 
-                <!-- ===== Hooks ===== -->
-                <div class="tab-pane fade" id="tab-hooks">
-                    <div class="mb-3">
-                        <label class="form-label">前置 Hooks Setup (JSON Array)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_setup_hooks')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_setup_hooks')"><i class="bi bi-check-circle"></i> 验证</button>
+                    <div class="tab-pane fade" id="tab-hooks">
+                        <div class="mb-3">
+                            <label class="form-label">前置 Hooks Setup (JSON Array)</label>
+                            <div class="json-field-toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_setup_hooks')"><i class="bi bi-code-slash"></i> 格式化</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_setup_hooks')"><i class="bi bi-check-circle"></i> 验证</button>
+                            </div>
+                            <textarea class="form-control font-monospace" name="setup_hooks" id="id_setup_hooks" data-json="true" rows="6">{% if form_data %}{{ form_data.setup_hooks }}{% elif testcase %}{{ testcase.setup_hooks|default:"[]" }}{% else %}[]{% endif %}</textarea>
                         </div>
-                        <textarea class="form-control font-monospace" name="setup_hooks" id="id_setup_hooks" data-json="true" rows="6">{% if form_data %}{{ form_data.setup_hooks }}{% elif testcase %}{{ testcase.setup_hooks|default:"[]" }}{% else %}[]{% endif %}</textarea>
-                        <small class="text-muted">请求发送前执行的钩子。例: ["hook.setup_auth(request)"]</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">后置 Hooks Teardown (JSON Array)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_teardown_hooks')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_teardown_hooks')"><i class="bi bi-check-circle"></i> 验证</button>
+                        <div class="mb-3">
+                            <label class="form-label">后置 Hooks Teardown (JSON Array)</label>
+                            <div class="json-field-toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('id_teardown_hooks')"><i class="bi bi-code-slash"></i> 格式化</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('id_teardown_hooks')"><i class="bi bi-check-circle"></i> 验证</button>
+                            </div>
+                            <textarea class="form-control font-monospace" name="teardown_hooks" id="id_teardown_hooks" data-json="true" rows="6">{% if form_data %}{{ form_data.teardown_hooks }}{% elif testcase %}{{ testcase.teardown_hooks|default:"[]" }}{% else %}[]{% endif %}</textarea>
                         </div>
-                        <textarea class="form-control font-monospace" name="teardown_hooks" id="id_teardown_hooks" data-json="true" rows="6">{% if form_data %}{{ form_data.teardown_hooks }}{% elif testcase %}{{ testcase.teardown_hooks|default:"[]" }}{% else %}[]{% endif %}</textarea>
-                        <small class="text-muted">响应接收后执行的钩子。例: ["hook.log_response(response)"]</small>
                     </div>
-                </div>
 
-                <!-- ===== 参数化 ===== -->
-                <div class="tab-pane fade" id="tab-ddt">
-                    <div class="mb-3">
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" name="is_parameterized" id="is_parameterized"
-                                   {% if form_data and form_data.is_parameterized %}checked{% elif testcase and testcase.is_parameterized %}checked{% endif %}>
-                            <label class="form-check-label" for="is_parameterized">启用参数化</label>
+                    <div class="tab-pane fade" id="tab-ddt">
+                        <div class="mb-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="is_parameterized" id="is_parameterized"
+                                       {% if form_data and form_data.is_parameterized %}checked{% elif testcase and testcase.is_parameterized %}checked{% endif %}>
+                                <label class="form-check-label" for="is_parameterized">启用参数化</label>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mb-3" id="ddt-source-group">
-                        <label class="form-label">关联数据源</label>
-                        <select class="form-select" name="ddt_source" id="ddt-source-select">
-                            <option value="">不关联数据源</option>
-                            {% for src in ddt_sources %}
-                            <option value="{{ src.pk }}"
-                                    {% if testcase and testcase.ddt_source.pk == src.pk %}selected{% elif form_data and form_data.ddt_source == src.pk|stringformat:"s" %}selected{% endif %}>
-                                {{ src.name }} ({{ src.source_type }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <small class="text-muted">启用参数化后，选择一个数据源，用例将基于数据自动展开多组执行</small>
-                    </div>
-                    {% if testcase and testcase.ddt_source %}
-                    <div class="mb-3">
-                        <a href="{% url 'ddt_preview' testcase.ddt_source.pk %}" class="btn btn-sm btn-outline-info" target="_blank">
-                            <i class="bi bi-eye"></i> 预览当前数据源
-                        </a>
-                    </div>
-                    {% endif %}
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> 参数化用例执行时，pytest 将为数据源中的每组数据生成一条独立的测试用例。<br>
-                        例如：数据源有 3 组登录数据，则生成 test_login[case0]、test_login[case1]、test_login[case2] 三条用例。
+                        <div class="mb-3" id="ddt-source-group">
+                            <label class="form-label">关联数据源</label>
+                            <select class="form-select" name="ddt_source" id="ddt-source-select">
+                                <option value="">不关联数据源</option>
+                                {% for src in ddt_sources %}
+                                <option value="{{ src.pk }}"
+                                        {% if testcase and testcase.ddt_source.pk == src.pk %}selected{% elif form_data and form_data.ddt_source == src.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ src.name }} ({{ src.source_type }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if testcase and testcase.ddt_source %}
+                        <div class="mb-3">
+                            <a href="{% url 'ddt_preview' testcase.ddt_source.pk %}" class="btn btn-sm btn-outline-info" target="_blank">
+                                <i class="bi bi-eye"></i> 预览当前数据源
+                            </a>
+                        </div>
+                        {% endif %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 参数化用例执行时，pytest 将为数据源中的每组数据生成一条独立的测试用例。
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="card-footer">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
-            <a href="{% url 'testcase_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-        </div>
-    </form>
+            <div class="card-footer form-shell-footer">
+                <div class="form-footer-copy">
+                    <span class="command-card-kicker">保存当前用例配置</span>
+                    <strong>提交后会保留当前 JSON 配置与标签页结构</strong>
+                </div>
+                <div class="form-footer-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>保存</button>
+                    <a href="{% url 'testcase_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg me-1"></i>取消</a>
+                </div>
+            </div>
+        </form>
+    </section>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// 项目→模块联动
 $('#project-select').change(function() {
     var projectId = $(this).val();
     var moduleSelect = $('#module');
@@ -237,12 +226,10 @@ $('#project-select').change(function() {
     }
 });
 
-// 方法选择联动 URL 前缀显示
 $('#method-select').change(function() {
     $('#method-badge').text($(this).val());
 });
 
-// 参数化开关联动
 $('#is_parameterized').change(function() {
     if ($(this).is(':checked')) {
         $('#ddt-source-group').show();

@@ -17,9 +17,9 @@ class ModuleAdmin(admin.ModelAdmin):
 
 @admin.register(Config)
 class ConfigAdmin(admin.ModelAdmin):
-    list_display = ['name', 'module', 'env_type', 'created_by', 'created_at', 'updated_at']
+    list_display = ['name', 'base_url', 'module', 'env_type', 'created_by', 'created_at', 'updated_at']
     list_filter = ['env_type', 'module__project']
-    search_fields = ['name']
+    search_fields = ['name', 'base_url']
 
 
 @admin.register(TestCase)

@@ -9,39 +9,51 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-diagram-3"></i> {% if module %}编辑模块{% else %}新增模块{% endif %}</h4>
-</div>
+<div class="form-dashboard">
+    <section class="form-hero">
+        <div class="form-hero-copy">
+            <p class="command-eyebrow">Module Configuration</p>
+            <h4>编辑面板</h4>
+            <p>维护模块与项目归属关系，统一进入表单工作台。</p>
+        </div>
+    </section>
 
-<div class="card">
-    <div class="card-header">{% if module %}编辑模块{% else %}新增模块{% endif %}</div>
-    <form method="post" id="module-form">
-        {% csrf_token %}
-        <div class="card-body">
-            <div class="mb-3">
-                <label for="project" class="form-label">所属项目 <span class="text-danger">*</span></label>
-                <select class="form-select" id="project" name="project" required>
-                    <option value="">请选择项目</option>
-                    {% for p in projects %}
-                    <option value="{{ p.pk }}" {% if form_data and form_data.project == p.pk|stringformat:"s" %}selected{% elif module and module.project.pk == p.pk %}selected{% endif %}>{{ p.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="name" class="form-label">模块名称 <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="name" name="name"
-                       value="{% if form_data %}{{ form_data.name }}{% elif module %}{{ module.name }}{% endif %}" required>
-            </div>
-            <div class="mb-3">
-                <label for="description" class="form-label">模块描述</label>
-                <textarea class="form-control" id="description" name="description" rows="3">{% if form_data %}{{ form_data.description }}{% elif module %}{{ module.description }}{% endif %}</textarea>
-            </div>
+    <section class="card form-shell-card">
+        <div class="card-header command-card-header">
+            <div><span class="command-card-kicker">配置标签</span><strong>{% if module %}编辑模块{% else %}新增模块{% endif %}</strong></div>
         </div>
-        <div class="card-footer">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
-            <a href="{% url 'module_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-        </div>
-    </form>
+        <form method="post" id="module-form">
+            {% csrf_token %}
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="project" class="form-label">所属项目 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="project" name="project" required>
+                        <option value="">请选择项目</option>
+                        {% for p in projects %}
+                        <option value="{{ p.pk }}" {% if form_data and form_data.project == p.pk|stringformat:"s" %}selected{% elif module and module.project.pk == p.pk %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="name" class="form-label">模块名称 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" value="{% if form_data %}{{ form_data.name }}{% elif module %}{{ module.name }}{% endif %}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">模块描述</label>
+                    <textarea class="form-control" id="description" name="description" rows="3">{% if form_data %}{{ form_data.description }}{% elif module %}{{ module.description }}{% endif %}</textarea>
+                </div>
+            </div>
+            <div class="card-footer form-shell-footer">
+                <div class="form-footer-copy">
+                    <span class="command-card-kicker">保存当前模块配置</span>
+                    <strong>提交后模块会归入对应项目</strong>
+                </div>
+                <div class="form-footer-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>保存</button>
+                    <a href="{% url 'module_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg me-1"></i>取消</a>
+                </div>
+            </div>
+        </form>
+    </section>
 </div>
 {% endblock %}

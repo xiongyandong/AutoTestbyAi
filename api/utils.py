@@ -54,5 +54,6 @@ def load_env_config(task):
         return {
             'variables': _ensure_dict(config.variables),
             'parameters': _ensure_dict(config.parameters),
+            'base_url': config.base_url or '',
         }
     return None

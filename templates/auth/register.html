@@ -1,0 +1,99 @@
+{% extends 'auth/base.html' %}
+
+{% block title %}注册 - 自动化测试平台{% endblock %}
+{% block hero_title %}创建平台账号{% endblock %}
+{% block hero_desc %}完成注册后即可进入项目、用例与测试任务管理能力。{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-card-header">
+        <h3>账号注册</h3>
+        <p>请使用有效邮箱创建团队成员账号</p>
+    </div>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.username.id_for_label }}">用户名</label>
+            <input
+                type="text"
+                name="{{ form.username.html_name }}"
+                id="{{ form.username.id_for_label }}"
+                class="form-control{% if form.username.errors %} is-invalid{% endif %}"
+                value="{{ form.username.value|default:'' }}"
+                placeholder="请输入登录用户名"
+                data-required-field="true"
+            >
+            {% for error in form.username.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+            <div class="invalid-feedback required-feedback" hidden>请输入登录用户名</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.email.id_for_label }}">企业邮箱</label>
+            <input
+                type="email"
+                name="{{ form.email.html_name }}"
+                id="{{ form.email.id_for_label }}"
+                class="form-control{% if form.email.errors %} is-invalid{% endif %}"
+                value="{{ form.email.value|default:'' }}"
+                placeholder="name@company.com"
+                data-required-field="true"
+            >
+            {% for error in form.email.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+            <div class="invalid-feedback required-feedback" hidden>请输入企业邮箱</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.password1.id_for_label }}">登录密码</label>
+            <input
+                type="password"
+                name="{{ form.password1.html_name }}"
+                id="{{ form.password1.id_for_label }}"
+                class="form-control{% if form.password1.errors %} is-invalid{% endif %}"
+                placeholder="请输入登录密码"
+                data-required-field="true"
+                data-password-input="true"
+                data-password-target="passwordRules"
+            >
+            {% for error in form.password1.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+            <div class="invalid-feedback required-feedback" hidden>请输入登录密码</div>
+            <div id="passwordRules" class="password-rules" hidden aria-hidden="true">
+                <div class="password-rules-title">密码需满足以下要求</div>
+                <div class="password-rule" data-rule="length">至少 8 位字符</div>
+                <div class="password-rule" data-rule="not_numeric">不能为纯数字</div>
+                <div class="password-rule" data-rule="not_common">不要使用常见弱密码</div>
+                <div class="password-rule" data-rule="not_similar">不要与用户名过于相似</div>
+            </div>
+        </div>
+        <div class="mb-4">
+            <label class="form-label" for="{{ form.password2.id_for_label }}">确认密码</label>
+            <input
+                type="password"
+                name="{{ form.password2.html_name }}"
+                id="{{ form.password2.id_for_label }}"
+                class="form-control{% if form.password2.errors %} is-invalid{% endif %}"
+                placeholder="请再次输入密码"
+                data-required-field="true"
+                data-password-confirm="true"
+                data-password-source="{{ form.password1.id_for_label }}"
+            >
+            <div id="passwordConfirmFeedback" class="password-confirm-feedback" hidden aria-hidden="true">
+                {% if form.password2.errors %}
+                    {{ form.password2.errors.0 }}
+                {% else %}
+                    两次输入的密码不一致
+                {% endif %}
+            </div>
+            <div class="invalid-feedback required-feedback" hidden>请再次输入密码</div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">注册并进入平台</button>
+    </form>
+    <div class="auth-card-footer">
+        <span>已经有账号？</span>
+        <a href="{% url 'login' %}">返回登录</a>
+    </div>
+</div>
+{% endblock %}

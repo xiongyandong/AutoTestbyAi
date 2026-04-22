@@ -11,64 +11,49 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-database"></i> 数据源预览: {{ source.name }}</h4>
-    <a href="{% url 'ddt_update' source.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> 编辑</a>
-</div>
+<div class="detail-dashboard">
+    <section class="detail-hero">
+        <div class="detail-hero-main">
+            <p class="command-eyebrow">DDT Preview</p>
+            <h4>数据预览</h4>
+            <p class="detail-summary">查看当前数据源的类型、条数和结构，便于在参数化执行前确认内容正确。</p>
+            <div class="detail-meta-grid">
+                <article><span>名称</span><strong>{{ source.name }}</strong></article>
+                <article><span>类型</span><strong>{{ source.source_type }}</strong></article>
+                <article><span>数据条数</span><strong>{{ total }}</strong></article>
+                <article><span>关联用例</span><strong>{{ source.testcases.count }}</strong></article>
+            </div>
+        </div>
+        <aside class="detail-hero-side">
+            <div class="detail-action-stack">
+                <a href="{% url 'ddt_update' source.pk %}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>编辑</a>
+                <a href="{% url 'ddt_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>返回列表</a>
+            </div>
+        </aside>
+    </section>
 
-<!-- Metadata Card -->
-<div class="card mb-3">
-    <div class="card-header"><i class="bi bi-info-circle"></i> 基本信息</div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-3"><strong>名称:</strong> {{ source.name }}</div>
-            <div class="col-md-2"><strong>类型:</strong> <span class="badge {% if source.source_type == 'JSON' %}bg-success{% elif source.source_type == 'YAML' %}bg-info{% elif source.source_type == 'CSV' %}bg-warning{% else %}bg-secondary{% endif %}">{{ source.source_type }}</span></div>
-            <div class="col-md-3"><strong>描述:</strong> {{ source.description|default:"-" }}</div>
-            <div class="col-md-2"><strong>数据条数:</strong> {{ total }}</div>
-            <div class="col-md-2"><strong>关联用例:</strong> {{ source.testcases.count }}</div>
+    <section class="card worktable-card">
+        <div class="card-header command-card-header">
+            <div><span class="command-card-kicker">数据列表</span><strong>结构化预览 {% if total > 50 %}<small class="text-muted">(仅显示前50条，共{{ total }}条)</small>{% endif %}</strong></div>
         </div>
-    </div>
-</div>
-
-<!-- Data Table -->
-<div class="card">
-    <div class="card-header">数据预览 {% if total > 50 %}<small class="text-muted">(仅显示前50条，共{{ total }}条)</small>{% endif %}</div>
-    <div class="card-body">
-        {% if columns %}
-        <div class="table-responsive">
-            <table class="table table-sm table-hover table-striped mb-0">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        {% for col in columns %}
-                        <th>{{ col }}</th>
+        <div class="card-body">
+            {% if columns %}
+            <div class="table-responsive">
+                <table class="table table-sm table-hover table-striped mb-0">
+                    <thead><tr><th>#</th>{% for col in columns %}<th>{{ col }}</th>{% endfor %}</tr></thead>
+                    <tbody>
+                        {% for row in rows %}
+                        <tr><td>{{ forloop.counter }}</td>{% for col in columns %}<td>{{ row|lookup:col|default:"-" }}</td>{% endfor %}</tr>
+                        {% empty %}
+                        <tr><td colspan="{{ columns|length|add:1 }}" class="text-center text-muted py-3">无数据</td></tr>
                         {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in rows %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        {% for col in columns %}
-                        <td>{{ row|lookup:col|default:"-" }}</td>
-                        {% endfor %}
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="{{ columns|length|add:1 }}" class="text-center text-muted py-3">无数据</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state"><i class="bi bi-database"></i><p>无可展示的结构化数据</p></div>
+            {% endif %}
         </div>
-        {% else %}
-        <div class="empty-state">
-            <i class="bi bi-database"></i>
-            <p>无可展示的结构化数据</p>
-        </div>
-        {% endif %}
-    </div>
-    <div class="card-footer">
-        <a href="{% url 'ddt_list' %}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> 返回列表</a>
-    </div>
+    </section>
 </div>
 {% endblock %}

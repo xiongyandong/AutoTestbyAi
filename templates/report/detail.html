@@ -9,181 +9,149 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-file-earmark-bar-graph"></i> 报告详情: {{ task.task_name }}</h4>
-    <div>
-        {% if result.report_path %}
-        <a href="{% url 'report_download' result.pk %}" class="btn btn-sm btn-success"><i class="bi bi-download"></i> 下载报告</a>
-        {% endif %}
-        <a href="{% url 'report_list' %}" class="btn btn-sm btn-secondary"><i class="bi bi-arrow-left"></i> 返回列表</a>
-    </div>
-</div>
+<div class="detail-dashboard">
+    <section class="detail-hero">
+        <div class="detail-hero-main">
+            <p class="command-eyebrow">Pytest Report Detail</p>
+            <h4>报告总览</h4>
+            <p class="detail-summary">查看当前任务的执行结果、通过率和同项目趋势，保持与首页一致的监控视角。</p>
+            <div class="detail-meta-grid">
+                <article>
+                    <span>任务名称</span>
+                    <strong>{{ task.task_name }}</strong>
+                </article>
+                <article>
+                    <span>执行环境</span>
+                    <strong>{{ task.get_execute_env_display }}</strong>
+                </article>
+                <article>
+                    <span>任务状态</span>
+                    <strong>{{ task.get_status_display }}</strong>
+                </article>
+                <article>
+                    <span>创建人</span>
+                    <strong>{{ task.created_by|default:"-" }}</strong>
+                </article>
+            </div>
+        </div>
+        <aside class="detail-hero-side">
+            <div class="detail-hero-side-card">
+                <span class="command-card-kicker">Pass Rate</span>
+                <strong>{{ pass_rate }}%</strong>
+                <p>当前执行结果的综合通过率。</p>
+            </div>
+            <div class="detail-action-stack">
+                {% if result.report_path %}
+                <a href="{% url 'report_download' result.pk %}" class="btn btn-success"><i class="bi bi-download me-1"></i>下载报告</a>
+                {% endif %}
+                <a href="{% url 'report_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>返回列表</a>
+            </div>
+        </aside>
+    </section>
 
-<!-- Task Info Card -->
-<div class="card mb-3">
-    <div class="card-header"><i class="bi bi-info-circle"></i> 任务信息</div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-3"><strong>任务名称:</strong> {{ task.task_name }}</div>
-            <div class="col-md-2"><strong>执行范围:</strong> <span class="badge badge-type-scope">{{ task.get_scope_display }}</span></div>
-            <div class="col-md-2"><strong>执行环境:</strong> <span class="badge badge-env-{{ task.execute_env|lower }}">{{ task.get_execute_env_display }}</span></div>
-            <div class="col-md-2"><strong>状态:</strong>
-                <span class="badge badge-status-{{ task.status|lower }}">
-                    {{ task.get_status_display }}
-                </span>
-            </div>
-            <div class="col-md-2"><strong>创建人:</strong> {{ task.created_by|default:"-" }}</div>
-        </div>
-        {% if task.project %}
-        <div class="row mt-2">
-            <div class="col-md-3"><strong>所属项目:</strong> {{ task.project.name }}</div>
-            {% if task.module %}<div class="col-md-3"><strong>所属模块:</strong> {{ task.module.name }}</div>{% endif %}
-            {% if task.testcase %}<div class="col-md-3"><strong>关联用例:</strong> {{ task.testcase.name }}</div>{% endif %}
-            {% if task.scene %}<div class="col-md-3"><strong>关联场景:</strong> {{ task.scene.name }}</div>{% endif %}
-        </div>
-        {% endif %}
-    </div>
-</div>
+    <section class="detail-metric-strip">
+        <article class="command-strip-item">
+            <span>结果总数</span>
+            <strong>{{ result.total_cases }}</strong>
+            <p>执行用例总数</p>
+        </article>
+        <article class="command-strip-item">
+            <span>通过</span>
+            <strong class="text-success">{{ result.passed }}</strong>
+            <p>成功执行</p>
+        </article>
+        <article class="command-strip-item">
+            <span>失败</span>
+            <strong class="text-danger">{{ result.failed }}</strong>
+            <p>断言失败</p>
+        </article>
+        <article class="command-strip-item">
+            <span>错误</span>
+            <strong class="text-warning">{{ result.error }}</strong>
+            <p>运行异常</p>
+        </article>
+        <article class="command-strip-item">
+            <span>跳过</span>
+            <strong>{{ result.skipped }}</strong>
+            <p>未执行</p>
+        </article>
+        <article class="command-strip-item">
+            <span>耗时</span>
+            <strong>{{ result.duration|floatformat:1 }}s</strong>
+            <p>总时长</p>
+        </article>
+    </section>
 
-<!-- Stat Cards -->
-<div class="row mb-3">
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-primary"><i class="bi bi-list-check"></i></div>
-            <div class="stat-info">
-                <div class="stat-number">{{ result.total_cases }}</div>
-                <div class="stat-label">总数</div>
+    <section class="detail-chart-grid">
+        <div class="card detail-chart-card">
+            <div class="card-header command-card-header">
+                <div>
+                    <span class="command-card-kicker">Result Split</span>
+                    <strong>结果分布</strong>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-success"><i class="bi bi-check-circle"></i></div>
-            <div class="stat-info">
-                <div class="stat-number text-success">{{ result.passed }}</div>
-                <div class="stat-label">通过</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-danger"><i class="bi bi-x-circle"></i></div>
-            <div class="stat-info">
-                <div class="stat-number text-danger">{{ result.failed }}</div>
-                <div class="stat-label">失败</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-warning"><i class="bi bi-exclamation-triangle"></i></div>
-            <div class="stat-info">
-                <div class="stat-number text-warning">{{ result.error }}</div>
-                <div class="stat-label">错误</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-purple"><i class="bi bi-skip-forward-circle"></i></div>
-            <div class="stat-info">
-                <div class="stat-number">{{ result.skipped }}</div>
-                <div class="stat-label">跳过</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-info"><i class="bi bi-stopwatch"></i></div>
-            <div class="stat-info">
-                <div class="stat-number">{{ result.duration|floatformat:1 }}s</div>
-                <div class="stat-label">耗时</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Pass Rate Progress Bar -->
-<div class="card mb-3">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <strong>通过率</strong>
-            <span class="fs-5 fw-bold {% if pass_rate >= 80 %}text-success{% elif pass_rate >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ pass_rate }}%</span>
-        </div>
-        <div class="progress" style="height:24px;">
-            {% if result.total_cases > 0 %}
-            {% widthratio result.passed result.total_cases 100 as pw %}
-            {% widthratio result.failed result.total_cases 100 as fw %}
-            {% widthratio result.error result.total_cases 100 as ew %}
-            <div class="progress-bar bg-success" style="width:{{ pw }}%">{{ result.passed }}</div>
-            <div class="progress-bar bg-danger" style="width:{{ fw }}%">{{ result.failed }}</div>
-            <div class="progress-bar bg-warning" style="width:{{ ew }}%">{{ result.error }}</div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Charts -->
-<div class="row mb-3">
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-header"><i class="bi bi-pie-chart"></i> 结果分布</div>
             <div class="card-body">
                 <canvas id="resultPieChart"></canvas>
             </div>
         </div>
-    </div>
-    <div class="col-md-8">
-        <div class="card h-100">
-            <div class="card-header"><i class="bi bi-graph-up"></i> 通过率趋势（同项目最近执行）</div>
+        <div class="card detail-chart-card">
+            <div class="card-header command-card-header">
+                <div>
+                    <span class="command-card-kicker">Project Trend</span>
+                    <strong>同项目通过率趋势</strong>
+                </div>
+            </div>
             <div class="card-body">
                 {% if trend_data|length > 1 %}
                 <canvas id="trendLineChart"></canvas>
                 {% else %}
-                <div class="text-center text-muted py-4">
-                    <i class="bi bi-graph-up" style="font-size:2rem"></i>
-                    <p class="mt-2 mb-0">数据不足，无法显示趋势图</p>
+                <div class="empty-state py-4">
+                    <i class="bi bi-graph-up"></i>
+                    <p>数据不足，无法显示趋势图</p>
                 </div>
                 {% endif %}
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<!-- pytest-html Report -->
-{% if report_html %}
-<div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-file-earmark-text"></i> pytest-html 原始报告</span>
-        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#reportHtmlCollapse">
-            <i class="bi bi-arrows-expand"></i> 展开/收起
-        </button>
-    </div>
-    <div class="collapse" id="reportHtmlCollapse">
-        <div class="card-body p-0">
-            <iframe id="reportFrame" srcdoc="{{ report_html|escape }}" style="width:100%;height:600px;border:none;"></iframe>
+    {% if report_html %}
+    <section class="card detail-log-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">Raw Html Report</span>
+                <strong>pytest-html 原始报告</strong>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#reportHtmlCollapse">
+                <i class="bi bi-arrows-expand"></i> 展开/收起
+            </button>
         </div>
-    </div>
-</div>
-{% endif %}
+        <div class="collapse" id="reportHtmlCollapse">
+            <div class="card-body p-0">
+                <iframe id="reportFrame" srcdoc="{{ report_html|escape }}" style="width:100%;height:600px;border:none;"></iframe>
+            </div>
+        </div>
+    </section>
+    {% endif %}
 
-<!-- Execution Log -->
-{% if result.log %}
-<div class="card mb-3">
-    <div class="card-header"><i class="bi bi-terminal"></i> 执行日志</div>
-    <div class="card-body">
-        <pre class="terminal-log"><code>{{ result.log }}</code></pre>
-    </div>
+    {% if result.log %}
+    <section class="card detail-log-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">Execution Log</span>
+                <strong>执行日志</strong>
+            </div>
+        </div>
+        <div class="card-body">
+            <pre class="terminal-log"><code>{{ result.log }}</code></pre>
+        </div>
+    </section>
+    {% endif %}
 </div>
-{% endif %}
-
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// 结果分布饼图
 const pieCtx = document.getElementById('resultPieChart').getContext('2d');
 new Chart(pieCtx, {
     type: 'doughnut',
@@ -203,7 +171,6 @@ new Chart(pieCtx, {
     }
 });
 
-// 通过率趋势图
 {% if trend_data|length > 1 %}
 const trendCtx = document.getElementById('trendLineChart').getContext('2d');
 const trendLabels = [{% for t in trend_data %}'{{ t.executed_at }}'{% if not forloop.last %},{% endif %}{% endfor %}];

@@ -9,290 +9,99 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-play-circle"></i> 新建任务</h4>
-</div>
+<div class="form-dashboard">
+    <section class="form-hero">
+        <div class="form-hero-copy">
+            <p class="command-eyebrow">Task Configuration</p>
+            <h4>编辑面板</h4>
+            <p>统一配置执行方式、执行范围和目标对象，保持现有动态联动与 Cron 配置逻辑。</p>
+        </div>
+    </section>
 
-<div class="card">
-    <div class="card-header">新建任务</div>
-    <form method="post" id="task-form">
-        {% csrf_token %}
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">任务名称 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="task_name"
-                               value="{% if form_data %}{{ form_data.task_name }}{% endif %}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">执行方式</label>
-                        <select class="form-select" name="task_type" id="task-type-select">
-                            <option value="SYNC">同步执行</option>
-                            <option value="ASYNC">异步执行 (Celery)</option>
-                            <option value="SCHEDULE">定时任务 (Crontab)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">执行范围</label>
-                        <select class="form-select" name="scope" id="scope-select">
-                            <option value="TESTCASE">单用例</option>
-                            <option value="MODULE">模块</option>
-                            <option value="PROJECT">项目</option>
-                            <option value="SCENE">场景</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">执行环境</label>
-                        <select class="form-select" name="execute_env">
-                            <option value="DEV">开发环境</option>
-                            <option value="QA">测试环境</option>
-                            <option value="PROD">生产环境</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">报告名称</label>
-                        <input type="text" class="form-control" name="report_name"
-                               value="{% if form_data %}{{ form_data.report_name }}{% endif %}"
-                               placeholder="留空则使用任务名称">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">创建人</label>
-                        <input type="text" class="form-control" name="created_by"
-                               value="{% if form_data %}{{ form_data.created_by }}{% endif %}">
-                    </div>
-                </div>
-            </div>
-
-            <!-- 定时任务配置（仅 SCHEDULE 类型显示） -->
-            <div id="schedule-config" style="display:none">
-                <hr>
-                <h6><i class="bi bi-clock"></i> 定时任务配置</h6>
+    <section class="card form-shell-card">
+        <div class="card-header command-card-header">
+            <div><span class="command-card-kicker">配置标签</span><strong>新建任务</strong></div>
+        </div>
+        <form method="post" id="task-form">
+            {% csrf_token %}
+            <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label">Cron 表达式 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="cron_expression" id="cron-input"
-                                   value="{% if form_data %}{{ form_data.cron_expression }}{% endif %}"
-                                   placeholder="分 时 日 月 周，如: 0 8 * * 1-5">
-                            <div class="form-text">
-                                格式: 分 时 日 月 周 &nbsp;
-                                <span id="cron-desc" class="text-primary"></span>
+                    <div class="col-md-6">
+                        <div class="mb-3"><label class="form-label">任务名称 <span class="text-danger">*</span></label><input type="text" class="form-control" name="task_name" value="{% if form_data %}{{ form_data.task_name }}{% endif %}" required></div>
+                        <div class="mb-3"><label class="form-label">执行方式</label><select class="form-select" name="task_type" id="task-type-select"><option value="SYNC">同步执行</option><option value="ASYNC">异步执行 (Celery)</option><option value="SCHEDULE">定时任务 (Crontab)</option></select></div>
+                        <div class="mb-3"><label class="form-label">执行范围</label><select class="form-select" name="scope" id="scope-select"><option value="TESTCASE">单用例</option><option value="MODULE">模块</option><option value="PROJECT">项目</option><option value="SCENE">场景</option></select></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3"><label class="form-label">执行环境</label><select class="form-select" name="execute_env"><option value="DEV">开发环境</option><option value="QA">测试环境</option><option value="PROD">生产环境</option></select></div>
+                        <div class="mb-3"><label class="form-label">报告名称</label><input type="text" class="form-control" name="report_name" value="{% if form_data %}{{ form_data.report_name }}{% endif %}" placeholder="留空则使用任务名称"></div>
+                        <div class="mb-3"><label class="form-label">创建人</label><input type="text" class="form-control" name="created_by" value="{% if form_data %}{{ form_data.created_by }}{% endif %}"></div>
+                    </div>
+                </div>
+
+                <div id="schedule-config" style="display:none">
+                    <hr><h6><i class="bi bi-clock"></i> 定时任务配置</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Cron 表达式 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="cron_expression" id="cron-input" value="{% if form_data %}{{ form_data.cron_expression }}{% endif %}" placeholder="分 时 日 月 周，如: 0 8 * * 1-5">
+                                <div class="form-text">格式: 分 时 日 月 周 &nbsp;<span id="cron-desc" class="text-primary"></span></div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-8">
-                        <div class="mb-3">
-                            <label class="form-label">常用示例</label>
-                            <div class="d-flex flex-wrap gap-2">
+                        <div class="col-md-8">
+                            <div class="mb-3"><label class="form-label">常用示例</label><div class="d-flex flex-wrap gap-2">
                                 <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 8 * * 1-5">工作日早8点</button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 9 * * *">每天早9点</button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="*/30 * * * *">每30分钟</button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 */2 * * *">每2小时</button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 0 * * 1">每周一零点</button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary cron-preset" data-cron="0 10 1 * *">每月1号10点</button>
-                            </div>
+                            </div></div>
                         </div>
                     </div>
+                    <div class="mb-3 form-check"><input type="checkbox" class="form-check-input" name="email_notify" id="email-notify"><label class="form-check-label" for="email-notify">执行完成后邮件通知</label></div>
                 </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" name="email_notify" id="email-notify">
-                    <label class="form-check-label" for="email-notify">执行完成后邮件通知</label>
+
+                <hr><h6>执行目标</h6>
+                <div class="scope-group" id="scope-testcase"><div class="row"><div class="col-md-4"><div class="mb-3"><label class="form-label">所属项目</label><select class="form-select" id="tc-project"><option value="">请选择项目</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}</select></div></div><div class="col-md-4"><div class="mb-3"><label class="form-label">所属模块</label><select class="form-select" id="tc-module"><option value="">请先选择项目</option></select></div></div><div class="col-md-4"><div class="mb-3"><label class="form-label">选择用例 <span class="text-danger">*</span></label><select class="form-select" name="testcase" id="tc-testcase"><option value="">请先选择模块</option></select></div></div></div></div>
+                <div class="scope-group" id="scope-module" style="display:none"><div class="row"><div class="col-md-6"><div class="mb-3"><label class="form-label">所属项目</label><select class="form-select" id="mod-project"><option value="">请选择项目</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}</select></div></div><div class="col-md-6"><div class="mb-3"><label class="form-label">选择模块 <span class="text-danger">*</span></label><select class="form-select" name="module" id="mod-module"><option value="">请先选择项目</option></select></div></div></div></div>
+                <div class="scope-group" id="scope-project" style="display:none"><div class="mb-3"><label class="form-label">选择项目 <span class="text-danger">*</span></label><select class="form-select" name="project" id="proj-select"><option value="">请选择项目</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}</select></div></div>
+                <div class="scope-group" id="scope-scene" style="display:none"><div class="mb-3"><label class="form-label">选择场景 <span class="text-danger">*</span></label><select class="form-select" name="scene"><option value="">请选择场景</option>{% for s in scenes %}<option value="{{ s.pk }}">{{ s.project.name }} / {{ s.name }}</option>{% endfor %}</select></div></div>
+            </div>
+            <div class="card-footer form-shell-footer">
+                <div class="form-footer-copy">
+                    <span class="command-card-kicker">保存当前任务配置</span>
+                    <strong>提交后可立即回到列表页执行或轮询状态</strong>
+                </div>
+                <div class="form-footer-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>创建</button>
+                    <a href="{% url 'task_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg me-1"></i>取消</a>
                 </div>
             </div>
-
-            <hr>
-            <h6>执行目标</h6>
-
-            <div class="scope-group" id="scope-testcase">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label">所属项目</label>
-                            <select class="form-select" id="tc-project">
-                                <option value="">请选择项目</option>
-                                {% for p in projects %}
-                                <option value="{{ p.pk }}">{{ p.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label">所属模块</label>
-                            <select class="form-select" id="tc-module">
-                                <option value="">请先选择项目</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label">选择用例 <span class="text-danger">*</span></label>
-                            <select class="form-select" name="testcase" id="tc-testcase">
-                                <option value="">请先选择模块</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="scope-group" id="scope-module" style="display:none">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label">所属项目</label>
-                            <select class="form-select" id="mod-project">
-                                <option value="">请选择项目</option>
-                                {% for p in projects %}
-                                <option value="{{ p.pk }}">{{ p.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label">选择模块 <span class="text-danger">*</span></label>
-                            <select class="form-select" name="module" id="mod-module">
-                                <option value="">请先选择项目</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="scope-group" id="scope-project" style="display:none">
-                <div class="mb-3">
-                    <label class="form-label">选择项目 <span class="text-danger">*</span></label>
-                    <select class="form-select" name="project" id="proj-select">
-                        <option value="">请选择项目</option>
-                        {% for p in projects %}
-                        <option value="{{ p.pk }}">{{ p.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div class="scope-group" id="scope-scene" style="display:none">
-                <div class="mb-3">
-                    <label class="form-label">选择场景 <span class="text-danger">*</span></label>
-                    <select class="form-select" name="scene">
-                        <option value="">请选择场景</option>
-                        {% for s in scenes %}
-                        <option value="{{ s.pk }}">{{ s.project.name }} / {{ s.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div class="card-footer">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 创建</button>
-            <a href="{% url 'task_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-        </div>
-    </form>
+        </form>
+    </section>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// 执行方式切换
-function toggleTaskType() {
-    var taskType = $('#task-type-select').val();
-    if (taskType === 'SCHEDULE') {
-        $('#schedule-config').show();
-    } else {
-        $('#schedule-config').hide();
-    }
-}
-$('#task-type-select').change(toggleTaskType);
-toggleTaskType();
-
-// Cron 预设按钮
-$('.cron-preset').click(function() {
-    var cron = $(this).data('cron');
-    $('#cron-input').val(cron);
-    describeCron(cron);
-});
-
-// Cron 描述
+function toggleTaskType() { $('#schedule-config').toggle($('#task-type-select').val() === 'SCHEDULE'); }
+$('#task-type-select').change(toggleTaskType); toggleTaskType();
+$('.cron-preset').click(function() { var cron = $(this).data('cron'); $('#cron-input').val(cron); describeCron(cron); });
 function describeCron(cron) {
-    var parts = cron.trim().split(/\s+/);
-    if (parts.length !== 5) { $('#cron-desc').text(''); return; }
-    var desc = [];
-    var min = parts[0], hour = parts[1], day = parts[2], month = parts[3], dow = parts[4];
-
-    if (min.startsWith('*/')) desc.push('每' + min.slice(2) + '分钟');
-    else if (hour.startsWith('*/')) desc.push('每' + hour.slice(2) + '小时');
-    else if (min !== '*') desc.push(min + '分');
-
-    if (hour !== '*' && !hour.startsWith('*/')) desc.push(hour + '时');
-    if (day !== '*') desc.push(day + '日');
-    if (month !== '*') desc.push(month + '月');
-
+    var parts = cron.trim().split(/\s+/); if (parts.length !== 5) { $('#cron-desc').text(''); return; }
+    var desc = []; var min = parts[0], hour = parts[1], day = parts[2], month = parts[3], dow = parts[4];
+    if (min.startsWith('*/')) desc.push('每' + min.slice(2) + '分钟'); else if (hour.startsWith('*/')) desc.push('每' + hour.slice(2) + '小时'); else if (min !== '*') desc.push(min + '分');
+    if (hour !== '*' && !hour.startsWith('*/')) desc.push(hour + '时'); if (day !== '*') desc.push(day + '日'); if (month !== '*') desc.push(month + '月');
     var dowMap = {'0':'周日','1':'周一','2':'周二','3':'周三','4':'周四','5':'周五','6':'周六','7':'周日'};
-    if (dow !== '*') {
-        if (dow.includes('-')) {
-            var r = dow.split('-');
-            desc.push((dowMap[r[0]]||r[0]) + '到' + (dowMap[r[1]]||r[1]));
-        } else {
-            desc.push(dowMap[dow] || dow);
-        }
-    }
-
+    if (dow !== '*') { if (dow.includes('-')) { var r = dow.split('-'); desc.push((dowMap[r[0]]||r[0]) + '到' + (dowMap[r[1]]||r[1])); } else { desc.push(dowMap[dow] || dow); } }
     $('#cron-desc').text(desc.length ? '→ ' + desc.join(' ') : '');
 }
-
 $('#cron-input').on('input', function() { describeCron($(this).val()); });
-
-// 执行范围切换
-function toggleScope() {
-    var scope = $('#scope-select').val();
-    $('.scope-group').hide();
-    $('#scope-' + scope.toLowerCase()).show();
-}
-$('#scope-select').change(toggleScope);
-toggleScope();
-
-$('#tc-project').change(function() {
-    var projectId = $(this).val();
-    var moduleSelect = $('#tc-module');
-    moduleSelect.empty().append('<option value="">请选择模块</option>');
-    $('#tc-testcase').empty().append('<option value="">请先选择模块</option>');
-    if (projectId) {
-        $.get('/configs/load-modules/', {project_id: projectId}, function(data) {
-            data.forEach(function(m) {
-                moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>');
-            });
-        });
-    }
-});
-
-$('#tc-module').change(function() {
-    var moduleId = $(this).val();
-    var tcSelect = $('#tc-testcase');
-    tcSelect.empty().append('<option value="">请选择用例</option>');
-    if (moduleId) {
-        $.get('/scenes/api/testcases/', {project_id: $('#tc-project').val()}, function(data) {
-            data.forEach(function(tc) {
-                tcSelect.append('<option value="' + tc.id + '">' + tc.name + ' (' + tc.method + ')</option>');
-            });
-        });
-    }
-});
-
-$('#mod-project').change(function() {
-    var projectId = $(this).val();
-    var moduleSelect = $('#mod-module');
-    moduleSelect.empty().append('<option value="">请选择模块</option>');
-    if (projectId) {
-        $.get('/configs/load-modules/', {project_id: projectId}, function(data) {
-            data.forEach(function(m) {
-                moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>');
-            });
-        });
-    }
-});
+function toggleScope() { var scope = $('#scope-select').val(); $('.scope-group').hide(); $('#scope-' + scope.toLowerCase()).show(); }
+$('#scope-select').change(toggleScope); toggleScope();
+$('#tc-project').change(function() { var projectId = $(this).val(); var moduleSelect = $('#tc-module'); moduleSelect.empty().append('<option value="">请选择模块</option>'); $('#tc-testcase').empty().append('<option value="">请先选择模块</option>'); if (projectId) { $.get('/configs/load-modules/', {project_id: projectId}, function(data) { data.forEach(function(m) { moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>'); }); }); } });
+$('#tc-module').change(function() { var moduleId = $(this).val(); var tcSelect = $('#tc-testcase'); tcSelect.empty().append('<option value="">请选择用例</option>'); if (moduleId) { $.get('/scenes/api/testcases/', {project_id: $('#tc-project').val()}, function(data) { data.forEach(function(tc) { tcSelect.append('<option value="' + tc.id + '">' + tc.name + ' (' + tc.method + ')</option>'); }); }); } });
+$('#mod-project').change(function() { var projectId = $(this).val(); var moduleSelect = $('#mod-module'); moduleSelect.empty().append('<option value="">请选择模块</option>'); if (projectId) { $.get('/configs/load-modules/', {project_id: projectId}, function(data) { data.forEach(function(m) { moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>'); }); }); } });
 </script>
 {% endblock %}

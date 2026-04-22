@@ -108,6 +108,12 @@ class PytestRunner:
                 merged = {**env_headers, **headers}
                 headers = merged
 
+        # base_url 自动拼接：仅当 URL 不以 http:// 或 https:// 开头时
+        if env_config and env_config.get('base_url'):
+            base_url = env_config['base_url'].rstrip('/')
+            if not url.startswith('http://') and not url.startswith('https://'):
+                url = base_url + '/' + url.lstrip('/')
+
         # 生成代码
         lines = [
             'import pytest',

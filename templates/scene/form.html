@@ -9,44 +9,55 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-diagram-2"></i> {% if scene %}编辑场景{% else %}新增场景{% endif %}</h4>
-</div>
+<div class="form-dashboard">
+    <section class="form-hero">
+        <div class="form-hero-copy">
+            <p class="command-eyebrow">Scene Configuration</p>
+            <h4>编辑面板</h4>
+            <p>维护场景归属、名称和描述，创建后可进入编排工作区继续配置执行链路。</p>
+        </div>
+    </section>
 
-<div class="card">
-    <div class="card-header">{% if scene %}编辑场景{% else %}新增场景{% endif %}</div>
-    <form method="post" id="scene-form">
-        {% csrf_token %}
-        <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label">所属项目 <span class="text-danger">*</span></label>
-                <select class="form-select" name="project" required>
-                    <option value="">请选择项目</option>
-                    {% for p in projects %}
-                    <option value="{{ p.pk }}" {% if form_data and form_data.project == p.pk|stringformat:"s" %}selected{% elif scene and scene.project.pk == p.pk %}selected{% endif %}>{{ p.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">场景名称 <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="name"
-                       value="{% if form_data %}{{ form_data.name }}{% elif scene %}{{ scene.name }}{% endif %}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">场景描述</label>
-                <textarea class="form-control" name="description" rows="3">{% if form_data %}{{ form_data.description }}{% elif scene %}{{ scene.description }}{% endif %}</textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">创建人</label>
-                <input type="text" class="form-control" name="created_by"
-                       value="{% if form_data %}{{ form_data.created_by }}{% elif scene %}{{ scene.created_by }}{% endif %}">
-            </div>
+    <section class="card form-shell-card">
+        <div class="card-header command-card-header">
+            <div><span class="command-card-kicker">配置标签</span><strong>{% if scene %}编辑场景{% else %}新增场景{% endif %}</strong></div>
         </div>
-        <div class="card-footer">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
-            <a href="{% url 'scene_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-        </div>
-    </form>
+        <form method="post" id="scene-form">
+            {% csrf_token %}
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">所属项目 <span class="text-danger">*</span></label>
+                    <select class="form-select" name="project" required>
+                        <option value="">请选择项目</option>
+                        {% for p in projects %}
+                        <option value="{{ p.pk }}" {% if form_data and form_data.project == p.pk|stringformat:"s" %}selected{% elif scene and scene.project.pk == p.pk %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">场景名称 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="name" value="{% if form_data %}{{ form_data.name }}{% elif scene %}{{ scene.name }}{% endif %}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">场景描述</label>
+                    <textarea class="form-control" name="description" rows="3">{% if form_data %}{{ form_data.description }}{% elif scene %}{{ scene.description }}{% endif %}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">创建人</label>
+                    <input type="text" class="form-control" name="created_by" value="{% if form_data %}{{ form_data.created_by }}{% elif scene %}{{ scene.created_by }}{% endif %}">
+                </div>
+            </div>
+            <div class="card-footer form-shell-footer">
+                <div class="form-footer-copy">
+                    <span class="command-card-kicker">保存当前场景配置</span>
+                    <strong>创建完成后可继续添加用例与拖拽排序</strong>
+                </div>
+                <div class="form-footer-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>保存</button>
+                    <a href="{% url 'scene_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg me-1"></i>取消</a>
+                </div>
+            </div>
+        </form>
+    </section>
 </div>
 {% endblock %}

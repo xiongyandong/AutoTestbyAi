@@ -42,7 +42,8 @@ class Config(models.Model):
     ]
 
     module = models.ForeignKey(Module, on_delete=models.CASCADE, verbose_name='所属模块', related_name='configs')
-    name = models.CharField('配置名称', max_length=100)
+    name = models.CharField('环境名称', max_length=100)
+    base_url = models.CharField('环境地址', max_length=500, blank=True, default='')
     variables = models.JSONField('全局变量', default=dict, blank=True)
     parameters = models.JSONField('公共请求参数', default=dict, blank=True)
     request_hooks = models.JSONField('请求Hooks', default=dict, blank=True)
@@ -53,7 +54,7 @@ class Config(models.Model):
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 
     class Meta:
-        verbose_name = '配置'
+        verbose_name = '环境'
         verbose_name_plural = verbose_name
         ordering = ['module', 'name']
 

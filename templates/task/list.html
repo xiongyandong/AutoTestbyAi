@@ -8,164 +8,167 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-play-circle"></i> 执行与调度</h4>
-    <a href="{% url 'task_create' %}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg"></i> 新建任务
-    </a>
-</div>
+<div class="list-dashboard">
+    <section class="list-hero">
+        <div class="list-hero-copy">
+            <p class="command-eyebrow">Task Workspace</p>
+            <h4>列表总览</h4>
+            <p>集中查看任务状态、类型、执行结果与调度信息，保持统一的工作台视图。</p>
+        </div>
+        <div class="list-hero-actions">
+            <a href="{% url 'task_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>新建任务
+            </a>
+        </div>
+    </section>
 
-<!-- Filter Bar -->
-<div class="filter-bar">
-    <form method="get" class="d-flex gap-2 align-items-center">
-        <select name="status" class="form-select form-select-sm" style="width:auto">
-            <option value="">全部状态</option>
-            <option value="PENDING" {% if current_status == 'PENDING' %}selected{% endif %}>待执行</option>
-            <option value="RUNNING" {% if current_status == 'RUNNING' %}selected{% endif %}>执行中</option>
-            <option value="COMPLETED" {% if current_status == 'COMPLETED' %}selected{% endif %}>已完成</option>
-            <option value="FAILED" {% if current_status == 'FAILED' %}selected{% endif %}>执行失败</option>
-        </select>
-        <select name="task_type" class="form-select form-select-sm" style="width:auto">
-            <option value="">全部类型</option>
-            <option value="SYNC" {% if current_type == 'SYNC' %}selected{% endif %}>同步执行</option>
-            <option value="ASYNC" {% if current_type == 'ASYNC' %}selected{% endif %}>异步执行</option>
-            <option value="SCHEDULE" {% if current_type == 'SCHEDULE' %}selected{% endif %}>定时任务</option>
-        </select>
-        <button type="submit" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-search"></i>
-        </button>
-    </form>
-</div>
+    <section class="filter-bar list-filter-bar">
+        <div class="list-filter-head">
+            <span class="command-card-kicker">筛选条件</span>
+            <strong>状态与类型</strong>
+        </div>
+        <form method="get" class="list-filter-form">
+            <select name="status" class="form-select">
+                <option value="">全部状态</option>
+                <option value="PENDING" {% if current_status == 'PENDING' %}selected{% endif %}>待执行</option>
+                <option value="RUNNING" {% if current_status == 'RUNNING' %}selected{% endif %}>执行中</option>
+                <option value="COMPLETED" {% if current_status == 'COMPLETED' %}selected{% endif %}>已完成</option>
+                <option value="FAILED" {% if current_status == 'FAILED' %}selected{% endif %}>执行失败</option>
+            </select>
+            <select name="task_type" class="form-select">
+                <option value="">全部类型</option>
+                <option value="SYNC" {% if current_type == 'SYNC' %}selected{% endif %}>同步执行</option>
+                <option value="ASYNC" {% if current_type == 'ASYNC' %}selected{% endif %}>异步执行</option>
+                <option value="SCHEDULE" {% if current_type == 'SCHEDULE' %}selected{% endif %}>定时任务</option>
+            </select>
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+    </section>
 
-<!-- Table -->
-<div class="card">
-    <div class="card-body">
-        <table class="table table-hover table-striped mb-0">
-            <thead>
-                <tr>
-                    <th width="5%">#</th>
-                    <th width="18%">任务名称</th>
-                    <th width="8%">类型</th>
-                    <th width="8%">范围</th>
-                    <th width="7%">环境</th>
-                    <th width="8%">状态</th>
-                    <th width="8%">结果</th>
-                    <th width="10%">Cron/调度</th>
-                    <th width="10%">创建时间</th>
-                    <th width="18%">操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for task in page_obj.object_list %}
-                <tr id="task-row-{{ task.pk }}">
-                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-                    <td>{{ task.task_name }}</td>
-                    <td>
-                        <span class="badge badge-type-{{ task.task_type|lower }}">{% if task.task_type == 'SYNC' %}同步{% elif task.task_type == 'ASYNC' %}异步{% elif task.task_type == 'SCHEDULE' %}定时{% endif %}</span>
-                    </td>
-                    <td><span class="badge badge-type-scope">{{ task.get_scope_display }}</span></td>
-                    <td><span class="badge badge-env-{{ task.execute_env|lower }}">{{ task.get_execute_env_display }}</span></td>
-                    <td>
-                        <span class="badge badge-status-{{ task.status|lower }} task-status-badge" data-task-id="{{ task.pk }}">
-                            {{ task.get_status_display }}
-                        </span>
-                    </td>
-                    <td>
-                        {% with result=task.results.first %}
-                        {% if result %}
-                        <span class="text-success">{{ result.passed }}</span>/<span class="text-muted">{{ result.total_cases }}</span>
-                        {% else %}-{% endif %}
-                        {% endwith %}
-                    </td>
-                    <td>
-                        {% if task.task_type == 'SCHEDULE' and task.cron_expression %}
-                        <code class="small">{{ task.cron_expression }}</code>
-                        {% elif task.task_type == 'ASYNC' %}
-                        <span class="text-muted small">Celery</span>
-                        {% else %}
-                        -
-                        {% endif %}
-                    </td>
-                    <td>{{ task.created_at|date:"m-d H:i" }}</td>
-                    <td class="actions">
-                        <div class="btn-group">
-                            {% if task.status == 'PENDING' or task.status == 'FAILED' %}
-                            <a href="{% url 'task_execute' task.pk %}" class="btn btn-sm btn-outline-success" title="执行" onclick="return confirm('确定要执行此任务吗？')">
-                                <i class="bi bi-play-fill"></i>
-                            </a>
-                            {% endif %}
-                            {% if task.results.exists %}
-                            <a href="{% url 'task_result' task.pk %}" class="btn btn-sm btn-outline-info" title="查看结果">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            {% endif %}
-                            <a href="{% url 'task_status' task.pk %}" class="btn btn-sm btn-outline-secondary task-status-btn" title="刷新状态" data-task-id="{{ task.pk }}">
-                                <i class="bi bi-arrow-clockwise"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger" title="删除"
-                                    onclick="confirmDelete('{% url 'task_delete' task.pk %}', '{{ task.task_name }}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="10">
-                        <div class="empty-state">
-                            <i class="bi bi-play-circle"></i>
-                            <p>暂无任务</p>
-                            <a href="{% url 'task_create' %}" class="btn btn-primary btn-sm">新建任务</a>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+    <section class="card worktable-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">数据列表</span>
+                <strong>执行与调度</strong>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="18%">任务名称</th>
+                        <th width="8%">类型</th>
+                        <th width="8%">范围</th>
+                        <th width="7%">环境</th>
+                        <th width="8%">状态</th>
+                        <th width="8%">结果</th>
+                        <th width="10%">Cron/调度</th>
+                        <th width="10%">创建时间</th>
+                        <th width="18%">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in page_obj.object_list %}
+                    <tr id="task-row-{{ task.pk }}">
+                        <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                        <td>{{ task.task_name }}</td>
+                        <td><span class="badge badge-type-{{ task.task_type|lower }}">{% if task.task_type == 'SYNC' %}同步{% elif task.task_type == 'ASYNC' %}异步{% elif task.task_type == 'SCHEDULE' %}定时{% endif %}</span></td>
+                        <td><span class="badge badge-type-scope">{{ task.get_scope_display }}</span></td>
+                        <td><span class="badge badge-env-{{ task.execute_env|lower }}">{{ task.get_execute_env_display }}</span></td>
+                        <td><span class="badge badge-status-{{ task.status|lower }} task-status-badge" data-task-id="{{ task.pk }}">{{ task.get_status_display }}</span></td>
+                        <td>
+                            {% with result=task.results.first %}
+                            {% if result %}
+                            <span class="text-success">{{ result.passed }}</span>/<span class="text-muted">{{ result.total_cases }}</span>
+                            {% else %}-{% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% if task.task_type == 'SCHEDULE' and task.cron_expression %}
+                            <code class="small">{{ task.cron_expression }}</code>
+                            {% elif task.task_type == 'ASYNC' %}
+                            <span class="text-muted small">Celery</span>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td>{{ task.created_at|date:"m-d H:i" }}</td>
+                        <td class="actions">
+                            <div class="btn-group">
+                                {% if task.status == 'PENDING' or task.status == 'FAILED' %}
+                                <a href="{% url 'task_execute' task.pk %}" class="btn btn-sm btn-outline-success" title="执行" onclick="return confirm('确定要执行此任务吗？')">
+                                    <i class="bi bi-play-fill"></i>
+                                </a>
+                                {% endif %}
+                                {% if task.results.exists %}
+                                <a href="{% url 'task_result' task.pk %}" class="btn btn-sm btn-outline-info" title="查看结果">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'task_status' task.pk %}" class="btn btn-sm btn-outline-secondary task-status-btn" title="刷新状态" data-task-id="{{ task.pk }}">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="删除"
+                                        onclick="confirmDelete('{% url 'task_delete' task.pk %}', '{{ task.task_name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-state">
+                                <i class="bi bi-play-circle"></i>
+                                <p>暂无任务</p>
+                                <a href="{% url 'task_create' %}" class="btn btn-primary btn-sm">新建任务</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-<!-- Pagination -->
-{% if page_obj.has_other_pages %}
-<div class="pagination-wrapper">
-    <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
-    <nav>
-        <ul class="pagination pagination-sm">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
-            </li>
-            {% endif %}
-
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}">{{ num }}</a></li>
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-wrapper">
+        <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
+        <nav>
+            <ul class="pagination pagination-sm">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+                </li>
                 {% endif %}
-            {% endfor %}
-
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&task_type={{ current_type }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// 异步任务状态轮询
 function pollTaskStatus(taskId) {
     $.get('/tasks/' + taskId + '/status/', function(data) {
         var badge = $('.task-status-badge[data-task-id="' + taskId + '"]');
@@ -183,14 +186,12 @@ function pollTaskStatus(taskId) {
     });
 }
 
-// 刷新状态按钮
 $('.task-status-btn').click(function(e) {
     e.preventDefault();
     var taskId = $(this).data('task-id');
     pollTaskStatus(taskId);
 });
 
-// 自动轮询正在执行的任务
 $('.task-status-badge').each(function() {
     var badge = $(this);
     if (badge.hasClass('badge-status-running')) {

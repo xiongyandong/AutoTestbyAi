@@ -9,40 +9,52 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-folder"></i> {% if project %}编辑项目{% else %}新增项目{% endif %}</h4>
-</div>
+<div class="form-dashboard">
+    <section class="form-hero">
+        <div class="form-hero-copy">
+            <p class="command-eyebrow">Project Configuration</p>
+            <h4>编辑面板</h4>
+            <p>维护项目名称、说明和创建信息，沿用统一的表单工作台结构。</p>
+        </div>
+    </section>
 
-<div class="card">
-    <div class="card-header">{% if project %}编辑项目{% else %}新增项目{% endif %}</div>
-    <form method="post" id="project-form">
-        {% csrf_token %}
-        <div class="card-body">
-            <div class="mb-3">
-                <label for="name" class="form-label">项目名称 <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="name" name="name"
-                       value="{% if form_data %}{{ form_data.name }}{% elif project %}{{ project.name }}{% endif %}"
-                       required>
-            </div>
-            <div class="mb-3">
-                <label for="description" class="form-label">项目描述</label>
-                <textarea class="form-control" id="description" name="description" rows="3">{% if form_data %}{{ form_data.description }}{% elif project %}{{ project.description }}{% endif %}</textarea>
-            </div>
-            <div class="mb-3">
-                <label for="created_by" class="form-label">创建人</label>
-                <input type="text" class="form-control" id="created_by" name="created_by"
-                       value="{% if form_data %}{{ form_data.created_by }}{% elif project %}{{ project.created_by }}{% endif %}">
+    <section class="card form-shell-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">配置标签</span>
+                <strong>{% if project %}编辑项目{% else %}新增项目{% endif %}</strong>
             </div>
         </div>
-        <div class="card-footer">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-check-lg"></i> 保存
-            </button>
-            <a href="{% url 'project_list' %}" class="btn btn-secondary">
-                <i class="bi bi-x-lg"></i> 取消
-            </a>
-        </div>
-    </form>
+        <form method="post" id="project-form">
+            {% csrf_token %}
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="name" class="form-label">项目名称 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name"
+                           value="{% if form_data %}{{ form_data.name }}{% elif project %}{{ project.name }}{% endif %}"
+                           required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">项目描述</label>
+                    <textarea class="form-control" id="description" name="description" rows="3">{% if form_data %}{{ form_data.description }}{% elif project %}{{ project.description }}{% endif %}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="created_by" class="form-label">创建人</label>
+                    <input type="text" class="form-control" id="created_by" name="created_by"
+                           value="{% if form_data %}{{ form_data.created_by }}{% elif project %}{{ project.created_by }}{% endif %}">
+                </div>
+            </div>
+            <div class="card-footer form-shell-footer">
+                <div class="form-footer-copy">
+                    <span class="command-card-kicker">保存当前项目配置</span>
+                    <strong>提交后立即更新项目基础信息</strong>
+                </div>
+                <div class="form-footer-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>保存</button>
+                    <a href="{% url 'project_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg me-1"></i>取消</a>
+                </div>
+            </div>
+        </form>
+    </section>
 </div>
 {% endblock %}

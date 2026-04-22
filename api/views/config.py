@@ -41,6 +41,7 @@ def config_create(request):
     if request.method == 'POST':
         module_id = request.POST.get('module', '')
         name = request.POST.get('name', '').strip()
+        base_url = request.POST.get('base_url', '').strip()
         env_type = request.POST.get('env_type', 'DEV')
         created_by = request.POST.get('created_by', '').strip()
         variables = request.POST.get('variables', '{}')
@@ -48,7 +49,7 @@ def config_create(request):
         request_hooks = request.POST.get('request_hooks', '{}')
         response_hooks = request.POST.get('response_hooks', '{}')
         if not module_id or not name:
-            messages.error(request, '模块和配置名称不能为空')
+            messages.error(request, '模块和环境名称不能为空')
             return render(request, 'config/form.html', {
                 'projects': projects, 'modules': modules,
                 'nav_config': 'active', 'form_data': request.POST,
@@ -66,11 +67,12 @@ def config_create(request):
                 'nav_config': 'active', 'form_data': request.POST,
             })
         Config.objects.create(
-            module=module, name=name, env_type=env_type, created_by=created_by,
+            module=module, name=name, base_url=base_url,
+            env_type=env_type, created_by=created_by,
             variables=variables_json, parameters=parameters_json,
             request_hooks=request_hooks_json, response_hooks=response_hooks_json,
         )
-        messages.success(request, f'配置 "{name}" 创建成功')
+        messages.success(request, f'环境 "{name}" 创建成功')
         return redirect('config_list')
     return render(request, 'config/form.html', {
         'projects': projects, 'modules': modules, 'nav_config': 'active',
@@ -84,6 +86,7 @@ def config_update(request, pk):
     if request.method == 'POST':
         module_id = request.POST.get('module', '')
         name = request.POST.get('name', '').strip()
+        base_url = request.POST.get('base_url', '').strip()
         env_type = request.POST.get('env_type', 'DEV')
         created_by = request.POST.get('created_by', '').strip()
         variables = request.POST.get('variables', '{}')
@@ -91,7 +94,7 @@ def config_update(request, pk):
         request_hooks = request.POST.get('request_hooks', '{}')
         response_hooks = request.POST.get('response_hooks', '{}')
         if not module_id or not name:
-            messages.error(request, '模块和配置名称不能为空')
+            messages.error(request, '模块和环境名称不能为空')
             return render(request, 'config/form.html', {
                 'config': config, 'projects': projects, 'modules': modules,
                 'nav_config': 'active', 'form_data': request.POST,
@@ -110,6 +113,7 @@ def config_update(request, pk):
             })
         config.module = module
         config.name = name
+        config.base_url = base_url
         config.env_type = env_type
         config.created_by = created_by
         config.variables = variables_json
@@ -117,7 +121,7 @@ def config_update(request, pk):
         config.request_hooks = request_hooks_json
         config.response_hooks = response_hooks_json
         config.save()
-        messages.success(request, f'配置 "{name}" 更新成功')
+        messages.success(request, f'环境 "{name}" 更新成功')
         return redirect('config_list')
     return render(request, 'config/form.html', {
         'config': config, 'projects': projects, 'modules': modules, 'nav_config': 'active',
@@ -129,7 +133,7 @@ def config_delete(request, pk):
     if request.method == 'POST':
         name = config.name
         config.delete()
-        messages.success(request, f'配置 "{name}" 已删除')
+        messages.success(request, f'环境 "{name}" 已删除')
         return redirect('config_list')
     return redirect('config_list')
 

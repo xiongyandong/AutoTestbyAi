@@ -1,134 +1,174 @@
 {% extends "base.html" %}
 
-{% block title %}{% if config %}编辑配置{% else %}新增配置{% endif %} - Pytest 测试平台{% endblock %}
+{% block title %}{% if config %}编辑环境{% else %}新增环境{% endif %} - Pytest 测试平台{% endblock %}
 {% block nav_config %}active{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'config_list' %}">配置管理</a></li>
-<li class="breadcrumb-item active">{% if config %}编辑配置{% else %}新增配置{% endif %}</li>
+<li class="breadcrumb-item"><a href="{% url 'config_list' %}">环境管理</a></li>
+<li class="breadcrumb-item active">{% if config %}编辑环境{% else %}新增环境{% endif %}</li>
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-gear"></i> {% if config %}编辑配置{% else %}新增配置{% endif %}</h4>
-</div>
+<div class="form-dashboard">
+    <section class="form-hero">
+        <div class="form-hero-copy">
+            <p class="command-eyebrow">Environment Configuration</p>
+            <h4>编辑面板</h4>
+            <p>维护环境地址、变量、公共参数与 Hooks，保留现有分标签编辑体验。</p>
+        </div>
+    </section>
 
-<div class="card">
-    <div class="card-header">{% if config %}编辑配置{% else %}新增配置{% endif %}</div>
-    <form method="post" id="config-form" data-json-format="true">
-        {% csrf_token %}
-        <div class="card-body">
-            <ul class="nav nav-tabs mb-3" role="tablist">
-                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic" type="button">基本信息</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#vars" type="button">全局变量</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#hooks" type="button">Hooks</button></li>
-            </ul>
-
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="basic">
-                    <div class="mb-3">
-                        <label for="project-select" class="form-label">所属项目 <span class="text-danger">*</span></label>
-                        <select class="form-select" id="project-select">
-                            <option value="">请选择项目</option>
-                            {% for p in projects %}
-                            <option value="{{ p.pk }}" {% if config and config.module.project.pk == p.pk %}selected{% elif form_data and form_data.project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="module" class="form-label">所属模块 <span class="text-danger">*</span></label>
-                        <select class="form-select" id="module" name="module" required>
-                            <option value="">请先选择项目</option>
-                            {% for m in modules %}
-                            <option value="{{ m.pk }}" data-project="{{ m.project.pk }}" {% if config and config.module.pk == m.pk %}selected{% elif form_data and form_data.module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="name" class="form-label">配置名称 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name"
-                               value="{% if form_data %}{{ form_data.name }}{% elif config %}{{ config.name }}{% endif %}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="env_type" class="form-label">环境类型</label>
-                        <select class="form-select" id="env_type" name="env_type">
-                            <option value="DEV" {% if config and config.env_type == 'DEV' %}selected{% elif form_data and form_data.env_type == 'DEV' %}selected{% endif %}>开发环境</option>
-                            <option value="QA" {% if config and config.env_type == 'QA' %}selected{% elif form_data and form_data.env_type == 'QA' %}selected{% endif %}>测试环境</option>
-                            <option value="PROD" {% if config and config.env_type == 'PROD' %}selected{% elif form_data and form_data.env_type == 'PROD' %}selected{% endif %}>生产环境</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="created_by" class="form-label">创建人</label>
-                        <input type="text" class="form-control" id="created_by" name="created_by"
-                               value="{% if form_data %}{{ form_data.created_by }}{% elif config %}{{ config.created_by }}{% endif %}">
-                    </div>
-                </div>
-
-                <div class="tab-pane fade" id="vars">
-                    <div class="mb-3">
-                        <label for="variables" class="form-label">全局变量 (JSON)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('variables')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('variables')"><i class="bi bi-check-circle"></i> 验证</button>
+    <section class="card form-shell-card">
+        <div class="card-header command-card-header">
+            <div><span class="command-card-kicker">配置标签</span><strong>{% if config %}编辑环境{% else %}新增环境{% endif %}</strong></div>
+        </div>
+        <form method="post" id="config-form">
+            {% csrf_token %}
+            <input type="hidden" id="variables" name="variables" value="">
+            <input type="hidden" id="parameters" name="parameters" value="">
+            <input type="hidden" id="request_hooks" name="request_hooks" value="{% if form_data %}{{ form_data.request_hooks }}{% elif config %}{{ config.request_hooks|default:"{}" }}{% else %}{}{% endif %}">
+            <input type="hidden" id="response_hooks" name="response_hooks" value="{% if form_data %}{{ form_data.response_hooks }}{% elif config %}{{ config.response_hooks|default:"{}" }}{% else %}{}{% endif %}">
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3 form-nav-tabs" role="tablist">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic" type="button">基本信息</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#global-config" type="button">全局配置</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#common-params" type="button">公共请求参数</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#hooks" type="button">Hooks</button></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="basic">
+                        <div class="mb-3">
+                            <label for="project-select" class="form-label">所属项目 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="project-select">
+                                <option value="">请选择项目</option>
+                                {% for p in projects %}
+                                <option value="{{ p.pk }}" {% if config and config.module.project.pk == p.pk %}selected{% elif form_data and form_data.project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <textarea class="form-control font-monospace" id="variables" name="variables" data-json="true" rows="8">{% if form_data %}{{ form_data.variables }}{% elif config %}{{ config.variables|default:"{}" }}{% else %}{}{% endif %}</textarea>
-                        <small class="text-muted">例: {"base_url": "http://api.example.com", "timeout": 30}</small>
-                    </div>
-                    <div class="mb-3">
-                        <label for="parameters" class="form-label">公共请求参数 (JSON)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('parameters')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('parameters')"><i class="bi bi-check-circle"></i> 验证</button>
+                        <div class="mb-3">
+                            <label for="module" class="form-label">所属模块 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="module" name="module" required>
+                                <option value="">请先选择项目</option>
+                                {% for m in modules %}
+                                <option value="{{ m.pk }}" data-project="{{ m.project.pk }}" {% if config and config.module.pk == m.pk %}selected{% elif form_data and form_data.module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <textarea class="form-control font-monospace" id="parameters" name="parameters" data-json="true" rows="8">{% if form_data %}{{ form_data.parameters }}{% elif config %}{{ config.parameters|default:"{}" }}{% else %}{}{% endif %}</textarea>
-                        <small class="text-muted">例: {"headers": {"Content-Type": "application/json"}}</small>
-                    </div>
-                </div>
-
-                <div class="tab-pane fade" id="hooks">
-                    <div class="mb-3">
-                        <label for="request_hooks" class="form-label">请求 Hooks (JSON)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('request_hooks')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('request_hooks')"><i class="bi bi-check-circle"></i> 验证</button>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">环境名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" value="{% if form_data %}{{ form_data.name }}{% elif config %}{{ config.name }}{% endif %}" required>
                         </div>
-                        <textarea class="form-control font-monospace" id="request_hooks" name="request_hooks" data-json="true" rows="8">{% if form_data %}{{ form_data.request_hooks }}{% elif config %}{{ config.request_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
-                        <small class="text-muted">例: {"setup": ["hook.add_token(request)"]}</small>
-                    </div>
-                    <div class="mb-3">
-                        <label for="response_hooks" class="form-label">响应 Hooks (JSON)</label>
-                        <div class="json-field-toolbar">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonField('response_hooks')"><i class="bi bi-code-slash"></i> 格式化</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="validateJsonField('response_hooks')"><i class="bi bi-check-circle"></i> 验证</button>
+                        <div class="mb-3">
+                            <label for="base_url" class="form-label">环境地址</label>
+                            <input type="text" class="form-control" id="base_url" name="base_url" placeholder="例：https://api.test.example.com" value="{% if form_data %}{{ form_data.base_url }}{% elif config %}{{ config.base_url }}{% endif %}">
                         </div>
-                        <textarea class="form-control font-monospace" id="response_hooks" name="response_hooks" data-json="true" rows="8">{% if form_data %}{{ form_data.response_hooks }}{% elif config %}{{ config.response_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
-                        <small class="text-muted">例: {"teardown": ["hook.log_response(response)"]}</small>
+                        <div class="mb-3">
+                            <label for="env_type" class="form-label">环境类型</label>
+                            <select class="form-select" id="env_type" name="env_type">
+                                <option value="DEV" {% if config and config.env_type == 'DEV' %}selected{% elif form_data and form_data.env_type == 'DEV' %}selected{% endif %}>开发环境</option>
+                                <option value="QA" {% if config and config.env_type == 'QA' %}selected{% elif form_data and form_data.env_type == 'QA' %}selected{% endif %}>测试环境</option>
+                                <option value="PROD" {% if config and config.env_type == 'PROD' %}selected{% elif form_data and form_data.env_type == 'PROD' %}selected{% endif %}>生产环境</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="created_by" class="form-label">创建人</label>
+                            <input type="text" class="form-control" id="created_by" name="created_by" value="{% if form_data %}{{ form_data.created_by }}{% elif config %}{{ config.created_by }}{% endif %}">
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="global-config">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0">全局变量</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addKvRow('variables-table')"><i class="bi bi-plus-lg"></i> 添加一项</button>
+                        </div>
+                        <table class="table table-bordered table-sm" id="variables-table"><thead class="table-light"><tr><th>Key</th><th>Value</th><th width="60px">操作</th></tr></thead><tbody id="variables-tbody"></tbody></table>
+                    </div>
+                    <div class="tab-pane fade" id="common-params">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0">公共请求参数</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addKvRow('parameters-table')"><i class="bi bi-plus-lg"></i> 添加一项</button>
+                        </div>
+                        <table class="table table-bordered table-sm" id="parameters-table"><thead class="table-light"><tr><th>Key</th><th>Value</th><th width="60px">操作</th></tr></thead><tbody id="parameters-tbody"></tbody></table>
+                    </div>
+                    <div class="tab-pane fade" id="hooks">
+                        <div class="mb-3">
+                            <label for="request_hooks_edit" class="form-label">请求 Hooks (JSON)</label>
+                            <div class="json-field-toolbar"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonHookField('request_hooks_edit', 'request_hooks')"><i class="bi bi-code-slash"></i> 格式化</button></div>
+                            <textarea class="form-control font-monospace" id="request_hooks_edit" rows="8">{% if form_data %}{{ form_data.request_hooks }}{% elif config %}{{ config.request_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="response_hooks_edit" class="form-label">响应 Hooks (JSON)</label>
+                            <div class="json-field-toolbar"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonHookField('response_hooks_edit', 'response_hooks')"><i class="bi bi-code-slash"></i> 格式化</button></div>
+                            <textarea class="form-control font-monospace" id="response_hooks_edit" rows="8">{% if form_data %}{{ form_data.response_hooks }}{% elif config %}{{ config.response_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="card-footer">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
-            <a href="{% url 'config_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i> 取消</a>
-        </div>
-    </form>
+            <div class="card-footer form-shell-footer">
+                <div class="form-footer-copy">
+                    <span class="command-card-kicker">保存当前环境配置</span>
+                    <strong>提交后会同步更新变量、公共参数与 Hooks</strong>
+                </div>
+                <div class="form-footer-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>保存</button>
+                    <a href="{% url 'config_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg me-1"></i>取消</a>
+                </div>
+            </div>
+        </form>
+    </section>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-$('#project-select').change(function() {
-    var projectId = $(this).val();
-    var moduleSelect = $('#module');
-    moduleSelect.empty().append('<option value="">请选择模块</option>');
-    if (projectId) {
-        $.get('{% url "load_modules" %}', {project_id: projectId}, function(data) {
-            data.forEach(function(m) {
-                moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>');
+var initVariables = {% if config %}{{ config.variables|default:"{}"|safe }}{% else %}{}{% endif %};
+var initParameters = {% if config %}{{ config.parameters|default:"{}"|safe }}{% else %}{}{% endif %};
+function addKvRow(tableId, key, value) {
+    var tbody = document.getElementById(tableId.replace('-table', '-tbody'));
+    var row = document.createElement('tr');
+    row.innerHTML =
+        '<td><input type="text" class="form-control form-control-sm kv-key" placeholder="Key" value="' + (key || '') + '"></td>' +
+        '<td><input type="text" class="form-control form-control-sm kv-value" placeholder="Value" value="' + (value || '') + '"></td>' +
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest(\'tr\').remove()"><i class="bi bi-dash-lg"></i></button></td>';
+    tbody.appendChild(row);
+}
+function initKvTable(tableId, jsonObj) { if (jsonObj && typeof jsonObj === 'object') { Object.entries(jsonObj).forEach(function(entry) { addKvRow(tableId, entry[0], entry[1]); }); } }
+function collectKvTable(tableId) {
+    var tbody = document.getElementById(tableId.replace('-table', '-tbody'));
+    var result = {};
+    tbody.querySelectorAll('tr').forEach(function(row) {
+        var key = row.querySelector('.kv-key').value.trim();
+        var val = row.querySelector('.kv-value').value.trim();
+        if (key) { result[key] = val; }
+    });
+    return JSON.stringify(result);
+}
+function formatJsonHookField(textareaId) {
+    var ta = document.getElementById(textareaId);
+    try { var parsed = JSON.parse(ta.value); ta.value = JSON.stringify(parsed, null, 2); ta.classList.remove('is-invalid'); ta.classList.add('is-valid'); }
+    catch(e) { ta.classList.add('is-invalid'); ta.classList.remove('is-valid'); }
+}
+document.getElementById('config-form').addEventListener('submit', function() {
+    document.getElementById('variables').value = collectKvTable('variables-table');
+    document.getElementById('parameters').value = collectKvTable('parameters-table');
+    var rhEdit = document.getElementById('request_hooks_edit');
+    var resHEdit = document.getElementById('response_hooks_edit');
+    try { JSON.parse(rhEdit.value); document.getElementById('request_hooks').value = rhEdit.value; } catch(e) { document.getElementById('request_hooks').value = '{}'; }
+    try { JSON.parse(resHEdit.value); document.getElementById('response_hooks').value = resHEdit.value; } catch(e) { document.getElementById('response_hooks').value = '{}'; }
+});
+$(document).ready(function() {
+    initKvTable('variables-table', initVariables);
+    initKvTable('parameters-table', initParameters);
+    $('#project-select').change(function() {
+        var projectId = $(this).val();
+        var moduleSelect = $('#module');
+        moduleSelect.empty().append('<option value="">请选择模块</option>');
+        if (projectId) {
+            $.get('{% url "load_modules" %}', {project_id: projectId}, function(data) {
+                data.forEach(function(m) { moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>'); });
             });
-        });
-    }
+        }
+    });
 });
 </script>
 {% endblock %}

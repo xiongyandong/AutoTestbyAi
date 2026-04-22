@@ -1,127 +1,128 @@
 {% extends "base.html" %}
 
-{% block title %}配置管理 - Pytest 测试平台{% endblock %}
+{% block title %}环境管理 - Pytest 测试平台{% endblock %}
 {% block nav_config %}active{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'project_list' %}">项目管理</a></li>
-<li class="breadcrumb-item active">配置管理</li>
+<li class="breadcrumb-item active">环境管理</li>
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-gear"></i> 配置管理</h4>
-    <a href="{% url 'config_create' %}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg"></i> 新增配置
-    </a>
-</div>
+<div class="list-dashboard">
+    <section class="list-hero">
+        <div class="list-hero-copy">
+            <p class="command-eyebrow">Environment Workspace</p>
+            <h4>列表总览</h4>
+            <p>查看环境地址、模块归属和环境类型，统一成轻量工作台式列表。</p>
+        </div>
+        <div class="list-hero-actions">
+            <a href="{% url 'config_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>新增环境</a>
+        </div>
+    </section>
 
-<!-- Filter Bar -->
-<div class="filter-bar">
-    <form method="get" class="d-flex gap-2 align-items-center">
-        <select name="project" class="form-select form-select-sm" id="filter-project" style="width:auto">
-            <option value="">全部项目</option>
-            {% for p in projects %}
-            <option value="{{ p.pk }}" {% if current_project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
-            {% endfor %}
-        </select>
-        <select name="module" class="form-select form-select-sm" id="filter-module" style="width:auto">
-            <option value="">全部模块</option>
-            {% for m in modules %}
-            <option value="{{ m.pk }}" {% if current_module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-search"></i>
-        </button>
-    </form>
-</div>
-
-<!-- Table -->
-<div class="card">
-    <div class="card-body">
-        <table class="table table-hover table-striped mb-0">
-            <thead>
-                <tr>
-                    <th width="5%">#</th>
-                    <th width="15%">配置名称</th>
-                    <th width="15%">所属模块</th>
-                    <th width="10%">所属项目</th>
-                    <th width="10%">环境</th>
-                    <th width="10%">创建人</th>
-                    <th width="15%">更新时间</th>
-                    <th width="15%">操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for config in page_obj.object_list %}
-                <tr>
-                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-                    <td>{{ config.name }}</td>
-                    <td>{{ config.module.name }}</td>
-                    <td>{{ config.module.project.name }}</td>
-                    <td><span class="badge badge-env-{{ config.env_type|lower }}">{{ config.get_env_type_display }}</span></td>
-                    <td>{{ config.created_by|default:"-" }}</td>
-                    <td>{{ config.updated_at|date:"Y-m-d H:i" }}</td>
-                    <td class="actions">
-                        <div class="btn-group">
-                            <a href="{% url 'config_update' config.pk %}" class="btn btn-sm btn-outline-primary" title="编辑"><i class="bi bi-pencil"></i></a>
-                            <button type="button" class="btn btn-sm btn-outline-danger" title="删除" onclick="confirmDelete('{% url 'config_delete' config.pk %}', '{{ config.name }}')"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8">
-                        <div class="empty-state">
-                            <i class="bi bi-gear"></i>
-                            <p>暂无配置</p>
-                            <a href="{% url 'config_create' %}" class="btn btn-primary btn-sm">新增配置</a>
-                        </div>
-                    </td>
-                </tr>
+    <section class="filter-bar list-filter-bar">
+        <div class="list-filter-head">
+            <span class="command-card-kicker">筛选条件</span>
+            <strong>项目与模块</strong>
+        </div>
+        <form method="get" class="list-filter-form list-filter-form-wide">
+            <select name="project" class="form-select" id="filter-project">
+                <option value="">全部项目</option>
+                {% for p in projects %}
+                <option value="{{ p.pk }}" {% if current_project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+            </select>
+            <select name="module" class="form-select" id="filter-module">
+                <option value="">全部模块</option>
+                {% for m in modules %}
+                <option value="{{ m.pk }}" {% if current_module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+        </form>
+    </section>
 
-<!-- Pagination -->
-{% if page_obj.has_other_pages %}
-<div class="pagination-wrapper">
-    <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
-    <nav>
-        <ul class="pagination pagination-sm">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
-            </li>
-            {% endif %}
+    <section class="card worktable-card">
+        <div class="card-header command-card-header">
+            <div><span class="command-card-kicker">数据列表</span><strong>环境管理</strong></div>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th width="4%">#</th>
+                        <th width="13%">环境名称</th>
+                        <th width="20%">环境地址</th>
+                        <th width="12%">所属模块</th>
+                        <th width="10%">所属项目</th>
+                        <th width="8%">环境</th>
+                        <th width="8%">创建人</th>
+                        <th width="13%">更新时间</th>
+                        <th width="12%">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for config in page_obj.object_list %}
+                    <tr>
+                        <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                        <td>{{ config.name }}</td>
+                        <td class="text-truncate" style="max-width:200px" title="{{ config.base_url }}">
+                            {% if config.base_url %}<code class="small">{{ config.base_url }}</code>{% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td>{{ config.module.name }}</td>
+                        <td>{{ config.module.project.name }}</td>
+                        <td><span class="badge badge-env-{{ config.env_type|lower }}">{{ config.get_env_type_display }}</span></td>
+                        <td>{{ config.created_by|default:"-" }}</td>
+                        <td>{{ config.updated_at|date:"Y-m-d H:i" }}</td>
+                        <td class="align-middle">
+                            <div class="btn-group">
+                                <a href="{% url 'config_update' config.pk %}" class="btn btn-sm btn-outline-primary" title="编辑"><i class="bi bi-pencil"></i></a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="删除" onclick="confirmDelete('{% url 'config_delete' config.pk %}', '{{ config.name }}')"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <i class="bi bi-globe"></i>
+                                <p>暂无环境</p>
+                                <a href="{% url 'config_create' %}" class="btn btn-primary btn-sm">新增环境</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}">{{ num }}</a></li>
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-wrapper">
+        <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
+        <nav>
+            <ul class="pagination pagination-sm">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
                 {% endif %}
-            {% endfor %}
-
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}

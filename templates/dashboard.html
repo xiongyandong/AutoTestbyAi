@@ -5,180 +5,216 @@
 {% block breadcrumb %}<li class="breadcrumb-item active">首页概览</li>{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h4><i class="bi bi-speedometer2"></i> 首页概览</h4>
-</div>
+<div class="command-dashboard">
+    <section class="command-hero">
+        <div class="command-hero-main">
+            <div class="command-hero-header">
+                <div>
+                    <p class="command-eyebrow">Automation Platform Overview</p>
+                    <h4>质量总览</h4>
+                </div>
+                <span class="command-sync-pill">近 7 天数据</span>
+            </div>
+            <p class="command-summary">自动化平台总览，优先展示通过率、执行量和最近结果，便于团队先判断当前质量状态，再进入执行与分析。</p>
+            <div class="command-highlight-grid">
+                <article class="command-highlight-card">
+                    <span>7天通过率</span>
+                    <strong>{{ week_pass_rate }}%</strong>
+                </article>
+                <article class="command-highlight-card">
+                    <span>项目总数</span>
+                    <strong>{{ project_count }}</strong>
+                </article>
+                <article class="command-highlight-card">
+                    <span>用例总数</span>
+                    <strong>{{ testcase_count }}</strong>
+                </article>
+                <article class="command-highlight-card">
+                    <span>7天通过</span>
+                    <strong>{{ week_passed }}</strong>
+                </article>
+            </div>
+        </div>
 
-<!-- 核心统计卡片 -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-primary"><i class="bi bi-folder"></i></div>
-            <div class="stat-info">
-                <div class="stat-number">{{ project_count }}</div>
-                <div class="stat-label">项目总数</div>
+        <aside class="command-hero-side">
+            <div class="command-side-card command-side-rate">
+                <span class="command-side-label">执行概览</span>
+                <strong>{{ week_total }}</strong>
+                <p>最近 7 天累计执行用例数，用来判断平台运行活跃度。</p>
             </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-success"><i class="bi bi-list-check"></i></div>
-            <div class="stat-info">
-                <div class="stat-number">{{ testcase_count }}</div>
-                <div class="stat-label">用例总数</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card stat-card">
-            <div class="stat-icon stat-bg-success"><i class="bi bi-check-circle"></i></div>
-            <div class="stat-info">
-                <div class="stat-number text-success">{{ week_passed }}</div>
-                <div class="stat-label">7天通过</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card stat-card">
-            <div class="stat-icon {% if week_pass_rate >= 80 %}stat-bg-success{% elif week_pass_rate >= 50 %}stat-bg-warning{% else %}stat-bg-danger{% endif %}">
-                <i class="bi bi-percent"></i>
-            </div>
-            <div class="stat-info">
-                <div class="stat-number {% if week_pass_rate >= 80 %}text-success{% elif week_pass_rate >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ week_pass_rate }}%</div>
-                <div class="stat-label">7天通过率</div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- 最近7天执行趋势图 + 统计明细 -->
-<div class="row g-3 mb-4">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-bar-chart"></i> 最近7天执行趋势</span>
-                <span class="text-muted" style="font-size:.75rem;">共 {{ week_total }} 条用例</span>
+            <div class="command-side-stack">
+                <div class="command-side-card">
+                    <span class="command-side-label">失败</span>
+                    <strong class="text-danger">{{ week_failed }}</strong>
+                </div>
+                <div class="command-side-card">
+                    <span class="command-side-label">错误</span>
+                    <strong class="text-warning">{{ week_error }}</strong>
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <section class="command-metric-strip" aria-label="质量指标">
+        <article class="command-strip-item">
+            <span>质量指标</span>
+            <strong>{{ week_pass_rate }}%</strong>
+            <p>综合通过率</p>
+        </article>
+        <article class="command-strip-item">
+            <span>执行规模</span>
+            <strong>{{ week_total }}</strong>
+            <p>7 天累计执行</p>
+        </article>
+        <article class="command-strip-item">
+            <span>项目覆盖</span>
+            <strong>{{ project_count }}</strong>
+            <p>已纳入项目</p>
+        </article>
+        <article class="command-strip-item">
+            <span>用例资产</span>
+            <strong>{{ testcase_count }}</strong>
+            <p>平台总用例数</p>
+        </article>
+    </section>
+
+    <section class="command-main-grid">
+        <div class="card command-chart-card">
+            <div class="card-header command-card-header">
+                <div>
+                    <span class="command-card-kicker">质量趋势</span>
+                    <strong>最近7天执行趋势</strong>
+                </div>
+                <span class="command-card-meta">共 {{ week_total }} 条用例</span>
             </div>
             <div class="card-body">
-                <canvas id="trendChart" height="260"></canvas>
+                <div class="command-chart-shell">
+                    <div class="command-chart-wrap">
+                        <canvas id="trendChart" height="260"></canvas>
+                    </div>
+                    <div class="command-summary-panel">
+                        <div class="command-summary-header">
+                            <span class="command-card-kicker">结果速览</span>
+                            <strong>执行结果拆解</strong>
+                        </div>
+                        <article class="command-summary-card">
+                            <span>通过</span>
+                            <strong class="text-success">{{ week_passed }}</strong>
+                            <p>稳定通过的用例数量</p>
+                        </article>
+                        <article class="command-summary-card">
+                            <span>失败</span>
+                            <strong class="text-danger">{{ week_failed }}</strong>
+                            <p>断言未通过的用例数量</p>
+                        </article>
+                        <article class="command-summary-card">
+                            <span>错误</span>
+                            <strong class="text-warning">{{ week_error }}</strong>
+                            <p>运行中断或异常退出数量</p>
+                        </article>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card" style="height:100%">
-            <div class="card-header"><i class="bi bi-pie-chart"></i> 7天执行概览</div>
-            <div class="card-body d-flex flex-column justify-content-center">
-                <div class="text-center mb-3">
-                    <div style="font-size:2.5rem;font-weight:700;color:var(--primary);">{{ week_total }}</div>
-                    <div class="text-muted">用例总数</div>
+
+        <div class="card command-overview-card">
+            <div class="card-header command-card-header">
+                <div>
+                    <span class="command-card-kicker">结果拆解</span>
+                    <strong>7天执行概览</strong>
                 </div>
-                <div class="row g-2 text-center">
-                    <div class="col-4">
-                        <div style="font-size:1.5rem;font-weight:700;color:var(--success);">{{ week_passed }}</div>
-                        <div class="text-muted" style="font-size:.8rem;">通过</div>
+            </div>
+            <div class="card-body">
+                <div class="command-overview-total">
+                    <strong>{{ week_total }}</strong>
+                    <span>用例总数</span>
+                </div>
+                <div class="command-overview-stats">
+                    <div>
+                        <strong class="text-success">{{ week_passed }}</strong>
+                        <span>通过</span>
                     </div>
-                    <div class="col-4">
-                        <div style="font-size:1.5rem;font-weight:700;color:var(--danger);">{{ week_failed }}</div>
-                        <div class="text-muted" style="font-size:.8rem;">失败</div>
+                    <div>
+                        <strong class="text-danger">{{ week_failed }}</strong>
+                        <span>失败</span>
                     </div>
-                    <div class="col-4">
-                        <div style="font-size:1.5rem;font-weight:700;color:var(--warning);">{{ week_error }}</div>
-                        <div class="text-muted" style="font-size:.8rem;">错误</div>
+                    <div>
+                        <strong class="text-warning">{{ week_error }}</strong>
+                        <span>错误</span>
                     </div>
                 </div>
-                <hr>
-                <div class="progress" style="height:1.25rem;">
+                <div class="progress command-overview-progress">
                     {% if week_total > 0 %}
-                    <div class="progress-bar bg-success" style="width:{% widthratio week_passed week_total 100 %}%">{{ week_passed }}</div>
-                    <div class="progress-bar bg-danger" style="width:{% widthratio week_failed week_total 100 %}%">{{ week_failed }}</div>
-                    <div class="progress-bar bg-warning" style="width:{% widthratio week_error week_total 100 %}%">{{ week_error }}</div>
+                    <div class="progress-bar bg-success" style="width:{% widthratio week_passed week_total 100 %}%"></div>
+                    <div class="progress-bar bg-danger" style="width:{% widthratio week_failed week_total 100 %}%"></div>
+                    <div class="progress-bar bg-warning" style="width:{% widthratio week_error week_total 100 %}%"></div>
                     {% endif %}
                 </div>
-                <div class="d-flex justify-content-between mt-1" style="font-size:.7rem;color:var(--text-muted);">
-                    <span><span style="color:var(--success);">■</span> 通过</span>
-                    <span><span style="color:var(--danger);">■</span> 失败</span>
-                    <span><span style="color:var(--warning);">■</span> 错误</span>
+                <div class="command-overview-legend">
+                    <span><i class="bi bi-square-fill text-success"></i> 通过</span>
+                    <span><i class="bi bi-square-fill text-danger"></i> 失败</span>
+                    <span><i class="bi bi-square-fill text-warning"></i> 错误</span>
+                </div>
+                <div class="command-link-grid">
+                    <a href="{% url 'task_create' %}" class="command-mini-link">
+                        <i class="bi bi-play-circle"></i>
+                        <span>新建任务</span>
+                    </a>
+                    <a href="{% url 'testcase_create' %}" class="command-mini-link">
+                        <i class="bi bi-list-check"></i>
+                        <span>新增用例</span>
+                    </a>
+                    <a href="{% url 'report_list' %}" class="command-mini-link">
+                        <i class="bi bi-file-earmark-bar-graph"></i>
+                        <span>查看报告</span>
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<!-- 快捷操作 + 最近报告 -->
-<div class="row g-3">
-    <div class="col-lg-4">
-        <div class="card" style="height:100%">
-            <div class="card-header"><i class="bi bi-lightning"></i> 快捷操作</div>
-            <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-6">
-                        <a href="{% url 'testcase_create' %}" class="quick-action-card d-block">
-                            <i class="bi bi-list-check" style="color:var(--success)"></i>
-                            <span>新增用例</span>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{% url 'task_create' %}" class="quick-action-card d-block">
-                            <i class="bi bi-play-circle" style="color:var(--warning)"></i>
-                            <span>新建任务</span>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{% url 'scene_create' %}" class="quick-action-card d-block">
-                            <i class="bi bi-diagram-2" style="color:var(--orange)"></i>
-                            <span>新增场景</span>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{% url 'project_create' %}" class="quick-action-card d-block">
-                            <i class="bi bi-folder-plus" style="color:var(--primary)"></i>
-                            <span>新增项目</span>
-                        </a>
-                    </div>
-                </div>
+    <section class="card command-report-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">最新结果</span>
+                <strong>最近测试报告</strong>
             </div>
+            <a href="{% url 'report_list' %}" class="btn btn-sm btn-outline-primary">查看全部</a>
         </div>
-    </div>
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-file-earmark-bar-graph"></i> 最近测试报告</span>
-                <a href="{% url 'report_list' %}" class="btn btn-sm btn-outline-primary">查看全部</a>
-            </div>
-            <div class="card-body p-0">
-                {% for r in recent_results %}
-                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                        {% if r.total_cases > 0 and r.failed == 0 and r.error == 0 %}
-                        <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-                        {% else %}
-                        <span class="badge bg-danger"><i class="bi bi-x-lg"></i></span>
-                        {% endif %}
-                        <a href="{% url 'report_detail' r.pk %}">{{ r.task.task_name|truncatechars:30 }}</a>
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        {% if r.total_cases > 0 %}
-                        <span style="font-size:.8rem;">
-                            <span class="text-success fw-bold">{{ r.passed }}</span>
-                            <span class="text-muted">/</span>
-                            <span class="text-danger fw-bold">{{ r.failed }}</span>
-                            <span class="text-muted">/</span>
-                            <span>{{ r.total_cases }}</span>
-                        </span>
-                        {% endif %}
-                        <small class="text-muted" style="white-space:nowrap;">{{ r.executed_at|date:"m-d H:i" }}</small>
+        <div class="card-body p-0">
+            {% for r in recent_results %}
+            <article class="command-report-row">
+                <div class="command-report-main">
+                    <span class="command-report-status {% if r.total_cases > 0 and r.failed == 0 and r.error == 0 %}is-success{% else %}is-danger{% endif %}">
+                        <i class="bi {% if r.total_cases > 0 and r.failed == 0 and r.error == 0 %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
+                    </span>
+                    <div>
+                        <a href="{% url 'report_detail' r.pk %}" class="command-report-link">{{ r.task.task_name|truncatechars:36 }}</a>
+                        <p class="command-report-meta">
+                            {% if r.task.project %}{{ r.task.project.name }} · {% endif %}{{ r.executed_at|date:"Y-m-d H:i" }}
+                        </p>
                     </div>
                 </div>
-                {% empty %}
-                <div class="empty-state py-4">
-                    <i class="bi bi-inbox"></i>
-                    <p>暂无测试报告</p>
-                    <a href="{% url 'task_create' %}" class="btn btn-sm btn-primary">创建执行任务</a>
+                <div class="command-report-stats">
+                    {% if r.total_cases > 0 %}
+                    <span><strong class="text-success">{{ r.passed }}</strong> 通过</span>
+                    <span><strong class="text-danger">{{ r.failed }}</strong> 失败</span>
+                    <span><strong class="text-muted">{{ r.total_cases }}</strong> 总数</span>
+                    {% else %}
+                    <span class="text-muted">暂无统计</span>
+                    {% endif %}
                 </div>
-                {% endfor %}
+            </article>
+            {% empty %}
+            <div class="empty-state py-5">
+                <i class="bi bi-inbox"></i>
+                <p>暂无测试报告</p>
+                <a href="{% url 'task_create' %}" class="btn btn-primary btn-sm">创建执行任务</a>
             </div>
+            {% endfor %}
         </div>
-    </div>
+    </section>
 </div>
 {% endblock %}
 
@@ -192,7 +228,12 @@
     var failedData = dailyStats.map(function(d) { return d.failed; });
     var errorData = dailyStats.map(function(d) { return d.error; });
 
-    var ctx = document.getElementById('trendChart').getContext('2d');
+    var chartElement = document.getElementById('trendChart');
+    if (!chartElement) {
+        return;
+    }
+
+    var ctx = chartElement.getContext('2d');
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -202,21 +243,21 @@
                     label: '通过',
                     data: passedData,
                     backgroundColor: 'rgba(34, 197, 94, 0.85)',
-                    borderRadius: 3,
+                    borderRadius: 8,
                     borderSkipped: false,
                 },
                 {
                     label: '失败',
                     data: failedData,
                     backgroundColor: 'rgba(239, 68, 68, 0.85)',
-                    borderRadius: 3,
+                    borderRadius: 8,
                     borderSkipped: false,
                 },
                 {
                     label: '错误',
                     data: errorData,
                     backgroundColor: 'rgba(245, 158, 11, 0.85)',
-                    borderRadius: 3,
+                    borderRadius: 8,
                     borderSkipped: false,
                 }
             ]
@@ -230,7 +271,7 @@
                     labels: {
                         usePointStyle: true,
                         pointStyle: 'rectRounded',
-                        padding: 16,
+                        padding: 18,
                         font: { size: 12 }
                     }
                 },
@@ -260,7 +301,7 @@
                         font: { size: 11 }
                     },
                     grid: {
-                        color: 'rgba(0,0,0,.06)'
+                        color: 'rgba(148,163,184,.18)'
                     }
                 }
             }

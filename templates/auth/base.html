@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CyberTest Auth Portal{% endblock %}</title>
+    <link rel="icon" href="{% static 'icon/20260407_2041443922915495936.png' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body class="auth-body">
+    {% if messages %}
+        <div class="app-toast-container">
+            {% for message in messages %}
+                <div class="toast app-toast app-toast-{{ message.tags|default:'info' }}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+                    <div class="toast-body">
+                        <i class="bi {% if 'success' in message.tags %}bi-check-circle-fill{% elif 'error' in message.tags or 'danger' in message.tags %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="auth-shell">
+        <section class="auth-hero">
+            <div class="auth-brand">
+                <span class="auth-brand-mark"><i class="bi bi-shield-lock"></i></span>
+                <div>
+                    <p class="auth-eyebrow">CYBERTEST AUTH PORTAL</p>
+                    <h1>自动化测试平台</h1>
+                </div>
+            </div>
+            <div class="auth-copy">
+                <h2>{% block hero_title %}企业认证入口{% endblock %}</h2>
+                <p>{% block hero_desc %}统一访问项目、用例、场景编排与执行调度能力。{% endblock %}</p>
+            </div>
+            <div class="auth-meta">
+                <div class="auth-meta-card">
+                    <span>项目管理</span>
+                    <strong>统一接入</strong>
+                </div>
+                <div class="auth-meta-card">
+                    <span>执行调度</span>
+                    <strong>安全访问</strong>
+                </div>
+                <div class="auth-meta-card">
+                    <span>报告中心</span>
+                    <strong>团队协作</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-panel">
+            {% block content %}{% endblock %}
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

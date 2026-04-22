@@ -6,3 +6,7 @@ __pycache__/
 docs
 db.sqlite3
 celery_broker.sqlite3
+running
+start.bat
+stop.bat
+.superpowers

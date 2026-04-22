@@ -8,183 +8,156 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-file-earmark-bar-graph"></i> 报告中心</h4>
-</div>
+<div class="list-dashboard">
+    <section class="list-hero">
+        <div class="list-hero-copy">
+            <p class="command-eyebrow">Report Workspace</p>
+            <h4>列表总览</h4>
+            <p>查看执行次数、结果分布和最近报告，统一成更轻的结果工作台。</p>
+        </div>
+    </section>
 
-<!-- 汇总统计 -->
-{% if summary and summary.total_runs %}
-<div class="row mb-3">
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number text-primary">{{ summary.total_runs|default:0 }}</div>
-            <div class="stat-label">执行次数</div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number">{{ summary.total_cases|default:0 }}</div>
-            <div class="stat-label">总用例数</div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number text-success">{{ summary.total_passed|default:0 }}</div>
-            <div class="stat-label">通过数</div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number text-danger">{{ summary.total_failed|default:0 }}</div>
-            <div class="stat-label">失败数</div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number text-warning">{{ summary.total_error|default:0 }}</div>
-            <div class="stat-label">错误数</div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card stat-card">
-            <div class="stat-number">{{ summary.avg_duration|floatformat:1 }}s</div>
-            <div class="stat-label">平均耗时</div>
-        </div>
-    </div>
-</div>
-{% endif %}
+    {% if summary and summary.total_runs %}
+    <section class="detail-metric-strip">
+        <article class="command-strip-item"><span>执行次数</span><strong class="text-primary">{{ summary.total_runs|default:0 }}</strong><p>总运行数</p></article>
+        <article class="command-strip-item"><span>总用例数</span><strong>{{ summary.total_cases|default:0 }}</strong><p>累计覆盖</p></article>
+        <article class="command-strip-item"><span>通过数</span><strong class="text-success">{{ summary.total_passed|default:0 }}</strong><p>成功执行</p></article>
+        <article class="command-strip-item"><span>失败数</span><strong class="text-danger">{{ summary.total_failed|default:0 }}</strong><p>断言失败</p></article>
+        <article class="command-strip-item"><span>错误数</span><strong class="text-warning">{{ summary.total_error|default:0 }}</strong><p>运行异常</p></article>
+        <article class="command-strip-item"><span>平均耗时</span><strong>{{ summary.avg_duration|floatformat:1 }}s</strong><p>平均时长</p></article>
+    </section>
+    {% endif %}
 
-<!-- Filter Bar -->
-<div class="filter-bar">
-    <form method="get" class="d-flex gap-2 align-items-center">
-        <select name="project" class="form-select form-select-sm" style="width:auto">
-            <option value="">全部项目</option>
-            {% for p in projects %}
-            <option value="{{ p.pk }}" {% if current_project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
-            {% endfor %}
-        </select>
-        <select name="status" class="form-select form-select-sm" style="width:auto">
-            <option value="">全部状态</option>
-            <option value="passed" {% if current_status == 'passed' %}selected{% endif %}>全部通过</option>
-            <option value="failed" {% if current_status == 'failed' %}selected{% endif %}>有失败</option>
-            <option value="error" {% if current_status == 'error' %}selected{% endif %}>有错误</option>
-        </select>
-        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}" style="width:auto">
-        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}" style="width:auto">
-        <button type="submit" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-search"></i>
-        </button>
-        <a href="{% url 'report_list' %}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-counterclockwise"></i>
-        </a>
-    </form>
-</div>
-
-<!-- Table -->
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover table-sm align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>任务名称</th>
-                        <th>项目</th>
-                        <th>执行范围</th>
-                        <th>环境</th>
-                        <th>总数</th>
-                        <th>通过</th>
-                        <th>失败</th>
-                        <th>错误</th>
-                        <th>跳过</th>
-                        <th>通过率</th>
-                        <th>耗时</th>
-                        <th>执行时间</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in page_obj.object_list %}
-                    <tr>
-                        <td><a href="{% url 'report_detail' r.pk %}">{{ r.task.task_name }}</a></td>
-                        <td>{{ r.task.project.name|default:"-" }}</td>
-                        <td><span class="badge badge-type-scope">{{ r.task.get_scope_display }}</span></td>
-                        <td><span class="badge badge-env-{{ r.task.execute_env|lower }}">{{ r.task.get_execute_env_display }}</span></td>
-                        <td>{{ r.total_cases }}</td>
-                        <td class="text-success fw-bold">{{ r.passed }}</td>
-                        <td class="text-danger fw-bold">{{ r.failed }}</td>
-                        <td class="text-warning fw-bold">{{ r.error }}</td>
-                        <td>{{ r.skipped }}</td>
-                        <td>
-                            {% if r.total_cases > 0 %}
-                            <div class="progress" style="height:18px;min-width:60px;">
-                                {% widthratio r.passed r.total_cases 100 as pw %}
-                                <div class="progress-bar bg-success" style="width:{{ pw }}%">{{ pw }}%</div>
-                            </div>
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td>{{ r.duration|floatformat:1 }}s</td>
-                        <td>{{ r.executed_at|date:"m-d H:i" }}</td>
-                        <td class="actions">
-                            <div class="btn-group">
-                                <a href="{% url 'report_detail' r.pk %}" class="btn btn-sm btn-outline-primary" title="查看详情"><i class="bi bi-eye"></i></a>
-                                {% if r.report_path %}
-                                <a href="{% url 'report_download' r.pk %}" class="btn btn-sm btn-outline-success" title="下载报告"><i class="bi bi-download"></i></a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="13">
-                            <div class="empty-state">
-                                <i class="bi bi-file-earmark-bar-graph"></i>
-                                <p>暂无测试报告</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <section class="filter-bar list-filter-bar">
+        <div class="list-filter-head">
+            <span class="command-card-kicker">筛选条件</span>
+            <strong>项目、状态与时间范围</strong>
         </div>
-    </div>
-</div>
+        <form method="get" class="list-filter-form list-filter-form-wide">
+            <select name="project" class="form-select">
+                <option value="">全部项目</option>
+                {% for p in projects %}
+                <option value="{{ p.pk }}" {% if current_project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="status" class="form-select">
+                <option value="">全部状态</option>
+                <option value="passed" {% if current_status == 'passed' %}selected{% endif %}>全部通过</option>
+                <option value="failed" {% if current_status == 'failed' %}selected{% endif %}>有失败</option>
+                <option value="error" {% if current_status == 'error' %}selected{% endif %}>有错误</option>
+            </select>
+            <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+            <a href="{% url 'report_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i></a>
+        </form>
+    </section>
 
-<!-- Pagination -->
-{% if page_obj.has_other_pages %}
-<div class="pagination-wrapper">
-    <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
-    <nav>
-        <ul class="pagination pagination-sm">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
-            </li>
-            {% endif %}
+    <section class="card worktable-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">数据列表</span>
+                <strong>报告中心</strong>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>任务名称</th>
+                            <th>项目</th>
+                            <th>执行范围</th>
+                            <th>环境</th>
+                            <th>总数</th>
+                            <th>通过</th>
+                            <th>失败</th>
+                            <th>错误</th>
+                            <th>跳过</th>
+                            <th>通过率</th>
+                            <th>耗时</th>
+                            <th>执行时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in page_obj.object_list %}
+                        <tr>
+                            <td><a href="{% url 'report_detail' r.pk %}">{{ r.task.task_name }}</a></td>
+                            <td>{{ r.task.project.name|default:"-" }}</td>
+                            <td><span class="badge badge-type-scope">{{ r.task.get_scope_display }}</span></td>
+                            <td><span class="badge badge-env-{{ r.task.execute_env|lower }}">{{ r.task.get_execute_env_display }}</span></td>
+                            <td>{{ r.total_cases }}</td>
+                            <td class="text-success fw-bold">{{ r.passed }}</td>
+                            <td class="text-danger fw-bold">{{ r.failed }}</td>
+                            <td class="text-warning fw-bold">{{ r.error }}</td>
+                            <td>{{ r.skipped }}</td>
+                            <td>
+                                {% if r.total_cases > 0 %}
+                                <div class="progress" style="height:18px;min-width:60px;">
+                                    {% widthratio r.passed r.total_cases 100 as pw %}
+                                    <div class="progress-bar bg-success" style="width:{{ pw }}%">{{ pw }}%</div>
+                                </div>
+                                {% else %}-{% endif %}
+                            </td>
+                            <td>{{ r.duration|floatformat:1 }}s</td>
+                            <td>{{ r.executed_at|date:"m-d H:i" }}</td>
+                            <td class="actions">
+                                <div class="btn-group">
+                                    <a href="{% url 'report_detail' r.pk %}" class="btn btn-sm btn-outline-primary" title="查看详情"><i class="bi bi-eye"></i></a>
+                                    {% if r.report_path %}
+                                    <a href="{% url 'report_download' r.pk %}" class="btn btn-sm btn-outline-success" title="下载报告"><i class="bi bi-download"></i></a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="13">
+                                <div class="empty-state">
+                                    <i class="bi bi-file-earmark-bar-graph"></i>
+                                    <p>暂无测试报告</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ num }}</a></li>
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-wrapper">
+        <span>共 {{ page_obj.paginator.count }} 条记录，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</span>
+        <nav>
+            <ul class="pagination pagination-sm">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+                </li>
                 {% endif %}
-            {% endfor %}
-
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_project %}&project={{ current_project }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}

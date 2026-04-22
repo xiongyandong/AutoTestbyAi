@@ -10,123 +10,149 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="page-header">
-    <h4><i class="bi bi-diagram-2"></i> 场景编排 <small class="text-muted ms-2">{{ scene.name }}</small></h4>
-    <a href="{% url 'scene_list' %}" class="btn btn-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> 返回列表
-    </a>
-</div>
-
-<div class="row">
-    <!-- 左侧：用例编排区 -->
-    <div class="col-md-8">
-        <div class="card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-list-ol"></i> 执行用例（拖拽排序）</span>
-                <span class="badge bg-secondary" id="case-count">{{ scene_cases|length }} 个用例</span>
+<div class="workspace-dashboard">
+    <section class="detail-hero">
+        <div class="detail-hero-main">
+            <p class="command-eyebrow">Scene Orchestration Workspace</p>
+            <h4>编排面板</h4>
+            <p class="detail-summary">为场景维护执行顺序、候选用例和链路预览，当前工作区保留现有拖拽与增删逻辑，只重组层级与可读性。</p>
+            <div class="detail-meta-grid">
+                <article>
+                    <span>场景名称</span>
+                    <strong>{{ scene.name }}</strong>
+                </article>
+                <article>
+                    <span>所属项目</span>
+                    <strong>{{ scene.project.name }}</strong>
+                </article>
+                <article>
+                    <span>当前用例</span>
+                    <strong id="case-count">{{ scene_cases|length }} 个</strong>
+                </article>
+                <article>
+                    <span>创建人</span>
+                    <strong>{{ scene.created_by|default:"-" }}</strong>
+                </article>
             </div>
-            <div class="card-body p-0">
-                <div id="case-list" data-scene-id="{{ scene.pk }}">
+        </div>
+        <aside class="detail-hero-side">
+            <div class="detail-hero-side-card">
+                <span class="command-card-kicker">Scene Info</span>
+                <strong>{{ scene.name }}</strong>
+                <p>{{ scene.description|default:"暂无场景描述" }}</p>
+            </div>
+            <div class="detail-action-stack">
+                <a href="{% url 'scene_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>返回列表</a>
+                <a href="{% url 'scene_update' scene.pk %}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>编辑基本信息</a>
+            </div>
+        </aside>
+    </section>
+
+    <section class="workspace-grid">
+        <div class="workspace-main">
+            <div class="card workspace-card">
+                <div class="card-header command-card-header">
+                    <div>
+                        <span class="command-card-kicker">Ordered Cases</span>
+                        <strong>执行用例</strong>
+                    </div>
+                    <span class="command-card-meta">拖拽排序</span>
+                </div>
+                <div class="card-body p-0">
+                    <div id="case-list" data-scene-id="{{ scene.pk }}" class="workspace-case-list">
+                        {% for sc in scene_cases %}
+                        <div class="workspace-case-row scene-case-item"
+                             draggable="true"
+                             data-case-id="{{ sc.pk }}"
+                             data-order="{{ sc.order_index }}">
+                            <span class="badge bg-secondary order-badge">{{ sc.order_index }}</span>
+                            <i class="bi bi-grip-vertical drag-handle"></i>
+                            <span class="badge badge-method-{{ sc.testcase.method|lower }}">{{ sc.testcase.method }}</span>
+                            <div class="workspace-case-copy">
+                                <strong>{{ sc.testcase.name }}</strong>
+                                <small>{{ sc.testcase.module.name }}</small>
+                            </div>
+                            {% if sc.testcase.extractors and sc.testcase.extractors|lookup:"0" %}
+                            <span class="badge bg-info"><i class="bi bi-link-45deg"></i> 提取</span>
+                            {% endif %}
+                            <div class="ms-auto">
+                                <button class="btn btn-sm btn-outline-danger btn-remove-case" data-case-id="{{ sc.pk }}" title="移除">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state" id="empty-hint">
+                            <i class="bi bi-inbox"></i>
+                            <p>暂无用例</p>
+                            <p class="small">请从右侧添加</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card workspace-card">
+                <div class="card-header command-card-header">
+                    <div>
+                        <span class="command-card-kicker">Chain Preview</span>
+                        <strong>执行链路预览</strong>
+                    </div>
+                </div>
+                <div class="card-body" id="chain-view">
                     {% for sc in scene_cases %}
-                    <div class="d-flex align-items-center border-bottom p-2 scene-case-item"
-                         draggable="true"
-                         data-case-id="{{ sc.pk }}"
-                         data-order="{{ sc.order_index }}">
-                        <span class="badge bg-secondary me-2 order-badge">{{ sc.order_index }}</span>
-                        <i class="bi bi-grip-vertical me-2 drag-handle"></i>
-                        <span class="badge badge-method-{{ sc.testcase.method|lower }} me-2">{{ sc.testcase.method }}</span>
-                        <span class="me-2">{{ sc.testcase.name }}</span>
-                        <small class="text-muted me-2">{{ sc.testcase.module.name }}</small>
-                        {% if sc.testcase.extractors and sc.testcase.extractors|lookup:"0" %}
-                        <span class="badge bg-info me-2"><i class="bi bi-link-45deg"></i> 提取</span>
-                        {% endif %}
-                        <div class="ms-auto">
-                            <button class="btn btn-sm btn-outline-danger btn-remove-case" data-case-id="{{ sc.pk }}" title="移除">
-                                <i class="bi bi-x-lg"></i>
+                    <span class="badge badge-method-{{ sc.testcase.method|lower }} chain-node">{{ sc.testcase.name }}</span>
+                    {% if not forloop.last %}
+                    <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                    {% endif %}
+                    {% empty %}
+                    <span class="text-muted">暂无执行链路</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <aside class="workspace-side">
+            <div class="card workspace-card">
+                <div class="card-header command-card-header">
+                    <div>
+                        <span class="command-card-kicker">Candidate Library</span>
+                        <strong>候选用例</strong>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="workspace-filter-stack">
+                        <select class="form-select form-select-sm" id="filter-project">
+                            <option value="">全部项目</option>
+                            {% for p in projects %}
+                            <option value="{{ p.pk }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" class="form-control form-control-sm" id="search-testcase" placeholder="搜索用例名称...">
+                    </div>
+                    <div id="available-testcases" class="workspace-available-list">
+                        {% for tc in available_testcases %}
+                        <div class="available-tc-item workspace-available-row" data-tc-id="{{ tc.pk }}" data-project-id="{{ tc.module.project.pk }}">
+                            <span class="badge badge-method-{{ tc.method|lower }}">{{ tc.method }}</span>
+                            <div class="workspace-case-copy">
+                                <strong class="text-truncate">{{ tc.name }}</strong>
+                                <small>{{ tc.module.name }}</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary btn-add-case ms-auto" data-tc-id="{{ tc.pk }}" title="添加">
+                                <i class="bi bi-plus"></i>
                             </button>
                         </div>
-                    </div>
-                    {% empty %}
-                    <div class="empty-state" id="empty-hint">
-                        <i class="bi bi-inbox"></i>
-                        <p>暂无用例</p>
-                        <p class="small">请从右侧添加</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <!-- 执行链路图 -->
-        <div class="card">
-            <div class="card-header"><i class="bi bi-share"></i> 执行链路</div>
-            <div class="card-body" id="chain-view">
-                {% for sc in scene_cases %}
-                <span class="badge badge-method-{{ sc.testcase.method|lower }} chain-node">{{ sc.testcase.name }}</span>
-                {% if not forloop.last %}
-                <i class="bi bi-arrow-right mx-1 text-muted"></i>
-                {% endif %}
-                {% empty %}
-                <span class="text-muted">暂无执行链路</span>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <!-- 右侧：添加用例 & 场景信息 -->
-    <div class="col-md-4">
-        <div class="card mb-3">
-            <div class="card-header"><i class="bi bi-plus-circle"></i> 添加用例</div>
-            <div class="card-body">
-                <div class="mb-2">
-                    <select class="form-select form-select-sm" id="filter-project">
-                        <option value="">全部项目</option>
-                        {% for p in projects %}
-                        <option value="{{ p.pk }}">{{ p.name }}</option>
+                        {% empty %}
+                        <div class="empty-state py-3">
+                            <i class="bi bi-inbox" style="font-size:1.5rem;"></i>
+                            <p class="small mb-0">无可添加用例</p>
+                        </div>
                         {% endfor %}
-                    </select>
-                </div>
-                <div class="mb-2">
-                    <input type="text" class="form-control form-control-sm" id="search-testcase" placeholder="搜索用例名称...">
-                </div>
-                <div id="available-testcases" style="max-height:320px;overflow-y:auto;">
-                    {% for tc in available_testcases %}
-                    <div class="d-flex align-items-center border-bottom py-1 available-tc-item" data-tc-id="{{ tc.pk }}" data-project-id="{{ tc.module.project.pk }}">
-                        <span class="badge badge-method-{{ tc.method|lower }} me-1" style="font-size:0.7rem;">{{ tc.method }}</span>
-                        <small class="me-1 text-truncate" style="max-width:140px;">{{ tc.name }}</small>
-                        <small class="text-muted me-1">{{ tc.module.name }}</small>
-                        <button class="btn btn-sm btn-outline-primary btn-add-case ms-auto py-0" data-tc-id="{{ tc.pk }}" title="添加">
-                            <i class="bi bi-plus"></i>
-                        </button>
                     </div>
-                    {% empty %}
-                    <div class="empty-state py-3">
-                        <i class="bi bi-inbox" style="font-size:1.5rem;"></i>
-                        <p class="small mb-0">无可添加用例</p>
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header"><i class="bi bi-info-circle"></i> 场景信息</div>
-            <div class="card-body">
-                <table class="table table-sm mb-0">
-                    <tr><td class="text-muted">项目</td><td>{{ scene.project.name }}</td></tr>
-                    <tr><td class="text-muted">名称</td><td>{{ scene.name }}</td></tr>
-                    <tr><td class="text-muted">描述</td><td>{{ scene.description|default:"-" }}</td></tr>
-                    <tr><td class="text-muted">创建人</td><td>{{ scene.created_by|default:"-" }}</td></tr>
-                </table>
-                <div class="mt-2">
-                    <a href="{% url 'scene_update' scene.pk %}" class="btn btn-sm btn-outline-secondary w-100">
-                        <i class="bi bi-pencil"></i> 编辑基本信息
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+        </aside>
+    </section>
 </div>
 {% endblock %}
 
@@ -135,8 +161,6 @@
 (function() {
     var sceneId = {{ scene.pk }};
     var dragSrcEl = null;
-
-    // --- Drag and Drop Reorder ---
     var caseList = document.getElementById("case-list");
 
     function handleDragStart(e) {
@@ -152,11 +176,11 @@
         return false;
     }
 
-    function handleDragEnter(e) {
+    function handleDragEnter() {
         this.classList.add("bg-light");
     }
 
-    function handleDragLeave(e) {
+    function handleDragLeave() {
         this.classList.remove("bg-light");
     }
 
@@ -165,7 +189,6 @@
         e.preventDefault();
         this.classList.remove("bg-light");
         if (dragSrcEl !== this) {
-            // Swap DOM positions
             var allItems = Array.from(caseList.querySelectorAll(".scene-case-item"));
             var fromIdx = allItems.indexOf(dragSrcEl);
             var toIdx = allItems.indexOf(this);
@@ -174,13 +197,12 @@
             } else {
                 this.parentNode.insertBefore(dragSrcEl, this);
             }
-            // Recalculate order and save
             saveOrder();
         }
         return false;
     }
 
-    function handleDragEnd(e) {
+    function handleDragEnd() {
         this.classList.remove("dragging");
         caseList.querySelectorAll(".scene-case-item").forEach(function(item) {
             item.classList.remove("bg-light");
@@ -205,9 +227,7 @@
             item.querySelector(".order-badge").textContent = idx + 1;
             orderData.push({id: parseInt(item.dataset.caseId), order: idx + 1});
         });
-        // Update chain view
         updateChainView();
-        // Save to server
         fetch("/scenes/" + sceneId + "/reorder/", {
             method: "POST",
             headers: {"X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/x-www-form-urlencoded"},
@@ -215,7 +235,6 @@
         });
     }
 
-    // --- Remove Case ---
     caseList.addEventListener("click", function(e) {
         var btn = e.target.closest(".btn-remove-case");
         if (!btn) return;
@@ -235,7 +254,6 @@
         });
     });
 
-    // --- Add Case ---
     document.getElementById("available-testcases").addEventListener("click", function(e) {
         var btn = e.target.closest(".btn-add-case");
         if (!btn) return;
@@ -248,7 +266,6 @@
             if (data.ok) {
                 var availItem = btn.closest(".available-tc-item");
                 if (availItem) availItem.remove();
-                // Reload page to reflect changes
                 location.reload();
             } else {
                 alert(data.error || "添加失败");
@@ -256,7 +273,6 @@
         });
     });
 
-    // --- Filter Available Testcases ---
     var filterProject = document.getElementById("filter-project");
     var searchInput = document.getElementById("search-testcase");
 
@@ -265,7 +281,7 @@
         var search = searchInput ? searchInput.value.toLowerCase() : "";
         document.querySelectorAll(".available-tc-item").forEach(function(item) {
             var matchProj = !projId || item.dataset.projectId === projId;
-            var tcName = item.querySelector("small").textContent.toLowerCase();
+            var tcName = item.querySelector("strong").textContent.toLowerCase();
             var matchSearch = !search || tcName.indexOf(search) >= 0;
             item.style.display = (matchProj && matchSearch) ? "" : "none";
         });
@@ -274,10 +290,9 @@
     if (filterProject) filterProject.addEventListener("change", filterAvailable);
     if (searchInput) searchInput.addEventListener("input", filterAvailable);
 
-    // --- Helpers ---
     function updateCaseCount() {
         var count = caseList.querySelectorAll(".scene-case-item").length;
-        document.getElementById("case-count").textContent = count + " 个用例";
+        document.getElementById("case-count").textContent = count + " 个";
     }
 
     function checkEmpty() {
@@ -297,8 +312,7 @@
         }
         var html = "";
         items.forEach(function(item, idx) {
-            var name = item.querySelector("span.me-2:nth-child(4)") ?
-                item.querySelectorAll("span")[3].textContent.trim() : "";
+            var name = item.querySelector(".workspace-case-copy strong").textContent.trim();
             var methodBadge = item.querySelector("[class*='badge-method-']");
             var method = methodBadge ? methodBadge.textContent.trim() : "";
             var cls = "badge-method-info";
@@ -315,7 +329,6 @@
         chainEl.innerHTML = html;
     }
 
-    // Init
     bindDragEvents();
 })();
 </script>
