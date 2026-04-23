@@ -17,6 +17,60 @@ class Project(models.Model):
         return self.name
 
 
+class ScriptAsset(models.Model):
+    SCOPE_PUBLIC = 'PUBLIC'
+    SCOPE_PROJECT = 'PROJECT'
+    SCOPE_CHOICES = [
+        (SCOPE_PUBLIC, '公共脚本'),
+        (SCOPE_PROJECT, '项目脚本'),
+    ]
+
+    scope_type = models.CharField('作用域', max_length=10, choices=SCOPE_CHOICES)
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, verbose_name='所属项目',
+        related_name='scripts', null=True, blank=True
+    )
+    name = models.CharField('脚本名称', max_length=200)
+    language = models.CharField('语言', max_length=20, default='python')
+    content = models.TextField('脚本内容', blank=True, default='')
+    function_index = models.JSONField('函数索引', default=list, blank=True)
+    is_system_generated = models.BooleanField('系统生成', default=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = '脚本资产'
+        verbose_name_plural = verbose_name
+        ordering = ['scope_type', 'name']
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def ensure_defaults(cls):
+        cls.objects.get_or_create(
+            scope_type=cls.SCOPE_PUBLIC,
+            project=None,
+            defaults={
+                'name': '公共脚本配置',
+                'language': 'python',
+                'content': '',
+                'function_index': [],
+            },
+        )
+        for project in Project.objects.all():
+            cls.objects.get_or_create(
+                scope_type=cls.SCOPE_PROJECT,
+                project=project,
+                defaults={
+                    'name': f'{project.name}脚本配置',
+                    'language': 'python',
+                    'content': '',
+                    'function_index': [],
+                },
+            )
+
+
 class ProjectConfig(models.Model):
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE,
@@ -67,8 +121,8 @@ class Config(models.Model):
     base_url = models.CharField('环境地址', max_length=500, blank=True, default='')
     variables = models.JSONField('全局变量', default=dict, blank=True)
     parameters = models.JSONField('公共请求参数', default=dict, blank=True)
-    request_hooks = models.JSONField('请求Hooks', default=dict, blank=True)
-    response_hooks = models.JSONField('响应Hooks', default=dict, blank=True)
+    request_hooks = models.JSONField('请求Hooks', default=list, blank=True)
+    response_hooks = models.JSONField('响应Hooks', default=list, blank=True)
     env_type = models.CharField('环境类型', max_length=10, choices=ENV_CHOICES, default='DEV')
     created_by = models.CharField('创建人', max_length=50, blank=True, default='')
     created_at = models.DateTimeField('创建时间', auto_now_add=True)

@@ -13,8 +13,8 @@
     <section class="form-hero">
         <div class="form-hero-copy">
             <p class="command-eyebrow">Environment Configuration</p>
-            <h4>编辑面板</h4>
-            <p>维护环境地址、变量、公共参数与 Hooks，保留现有分标签编辑体验。</p>
+            <h4>{% if config %}编辑环境{% else %}新增环境{% endif %}</h4>
+            <p>维护环境地址、变量和 Hooks。</p>
         </div>
     </section>
 
@@ -26,8 +26,8 @@
             {% csrf_token %}
             <input type="hidden" id="variables" name="variables" value="">
             <input type="hidden" id="parameters" name="parameters" value="">
-            <input type="hidden" id="request_hooks" name="request_hooks" value="{% if form_data %}{{ form_data.request_hooks }}{% elif config %}{{ config.request_hooks|default:"{}" }}{% else %}{}{% endif %}">
-            <input type="hidden" id="response_hooks" name="response_hooks" value="{% if form_data %}{{ form_data.response_hooks }}{% elif config %}{{ config.response_hooks|default:"{}" }}{% else %}{}{% endif %}">
+            <input type="hidden" id="request_hooks" name="request_hooks" value="">
+            <input type="hidden" id="response_hooks" name="response_hooks" value="">
             <div class="card-body">
                 <ul class="nav nav-tabs mb-3 form-nav-tabs" role="tablist">
                     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic" type="button">基本信息</button></li>
@@ -92,14 +92,30 @@
                     </div>
                     <div class="tab-pane fade" id="hooks">
                         <div class="mb-3">
-                            <label for="request_hooks_edit" class="form-label">请求 Hooks (JSON)</label>
-                            <div class="json-field-toolbar"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonHookField('request_hooks_edit', 'request_hooks')"><i class="bi bi-code-slash"></i> 格式化</button></div>
-                            <textarea class="form-control font-monospace" id="request_hooks_edit" rows="8">{% if form_data %}{{ form_data.request_hooks }}{% elif config %}{{ config.request_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">请求 Hooks</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addHookRow('request-hooks-tbody')"><i class="bi bi-plus-lg"></i> 添加 Hook</button>
+                            </div>
+                            <table class="table table-bordered table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr><th width="64">序号</th><th width="26%">函数</th><th>参数</th><th>调用预览</th><th width="60">操作</th></tr>
+                                </thead>
+                                <tbody id="request-hooks-tbody"></tbody>
+                            </table>
+                            <small class="text-muted d-block mt-2">请求 Hooks 在单条用例或场景执行开始前运行。参数示例：<code>"qa", ${token}</code></small>
                         </div>
                         <div class="mb-3">
-                            <label for="response_hooks_edit" class="form-label">响应 Hooks (JSON)</label>
-                            <div class="json-field-toolbar"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatJsonHookField('response_hooks_edit', 'response_hooks')"><i class="bi bi-code-slash"></i> 格式化</button></div>
-                            <textarea class="form-control font-monospace" id="response_hooks_edit" rows="8">{% if form_data %}{{ form_data.response_hooks }}{% elif config %}{{ config.response_hooks|default:"{}" }}{% else %}{}{% endif %}</textarea>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">响应 Hooks</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addHookRow('response-hooks-tbody')"><i class="bi bi-plus-lg"></i> 添加 Hook</button>
+                            </div>
+                            <table class="table table-bordered table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr><th width="64">序号</th><th width="26%">函数</th><th>参数</th><th>调用预览</th><th width="60">操作</th></tr>
+                                </thead>
+                                <tbody id="response-hooks-tbody"></tbody>
+                            </table>
+                            <small class="text-muted d-block mt-2">响应 Hooks 会在整次执行结束后统一运行一次，作为收尾清理。</small>
                         </div>
                     </div>
                 </div>
@@ -123,6 +139,11 @@
 <script>
 var initVariables = {% if config %}{{ config.variables|default:"{}"|safe }}{% else %}{}{% endif %};
 var initParameters = {% if config %}{{ config.parameters|default:"{}"|safe }}{% else %}{}{% endif %};
+var initRequestHooks = {% if form_data %}{{ form_data.request_hooks|default:"[]"|safe }}{% else %}{{ config_request_hooks_json|safe }}{% endif %};
+var initResponseHooks = {% if form_data %}{{ form_data.response_hooks|default:"[]"|safe }}{% else %}{{ config_response_hooks_json|safe }}{% endif %};
+var hookFunctionOptions = [];
+var hookOpen = '{' + '{';
+var hookClose = '}' + '}';
 function addKvRow(tableId, key, value) {
     var tbody = document.getElementById(tableId.replace('-table', '-tbody'));
     var row = document.createElement('tr');
@@ -143,26 +164,115 @@ function collectKvTable(tableId) {
     });
     return JSON.stringify(result);
 }
-function formatJsonHookField(textareaId) {
-    var ta = document.getElementById(textareaId);
-    try { var parsed = JSON.parse(ta.value); ta.value = JSON.stringify(parsed, null, 2); ta.classList.remove('is-invalid'); ta.classList.add('is-valid'); }
-    catch(e) { ta.classList.add('is-invalid'); ta.classList.remove('is-valid'); }
+
+function escapeHookValue(value) {
+    return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function parseHookExpression(expression) {
+    var match = String(expression || '').trim().match(/^\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)\s*\}\}$/);
+    if (!match) {
+        return { name: '', args: '' };
+    }
+    return { name: match[1], args: match[2].trim() };
+}
+
+function renderHookOptions(selectedName) {
+    var options = ['<option value="">请选择函数</option>'];
+    hookFunctionOptions.forEach(function(item) {
+        var selected = item.name === selectedName ? ' selected' : '';
+        options.push('<option value="' + escapeHookValue(item.name) + '"' + selected + '>' + escapeHookValue(item.name) + ' · ' + escapeHookValue(item.scope_label) + '</option>');
+    });
+    return options.join('');
+}
+
+function updateHookTableIndexes(tbodyId) {
+    document.querySelectorAll('#' + tbodyId + ' tr').forEach(function(row, index) {
+        row.querySelector('.hook-order').textContent = index + 1;
+    });
+}
+
+function updateHookRow(row) {
+    var name = row.querySelector('.hook-function').value.trim();
+    var args = row.querySelector('.hook-args').value.trim();
+    var preview = '';
+    if (name) {
+        preview = hookOpen + name + '(' + args + ')' + hookClose;
+    }
+    row.querySelector('.hook-preview').value = preview;
+}
+
+function addHookRow(tbodyId, hookData) {
+    var parsed = hookData || { name: '', args: '' };
+    var tbody = document.getElementById(tbodyId);
+    var row = document.createElement('tr');
+    row.innerHTML =
+        '<td class="text-center align-middle hook-order"></td>' +
+        '<td><select class="form-select form-select-sm hook-function">' + renderHookOptions(parsed.name) + '</select></td>' +
+        '<td><input type="text" class="form-control form-control-sm hook-args" placeholder="\\"qa\\", ${token}" value="' + escapeHookValue(parsed.args) + '"></td>' +
+        '<td><input type="text" class="form-control form-control-sm hook-preview font-monospace" readonly></td>' +
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHookRow(this, \'' + tbodyId + '\')"><i class="bi bi-dash-lg"></i></button></td>';
+    tbody.appendChild(row);
+    row.querySelector('.hook-function').addEventListener('change', function() { updateHookRow(row); });
+    row.querySelector('.hook-args').addEventListener('input', function() { updateHookRow(row); });
+    updateHookRow(row);
+    updateHookTableIndexes(tbodyId);
+}
+
+function removeHookRow(button, tbodyId) {
+    button.closest('tr').remove();
+    updateHookTableIndexes(tbodyId);
+}
+
+function initHookTable(tbodyId, hookList) {
+    var tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = '';
+    (hookList || []).forEach(function(expression) {
+        addHookRow(tbodyId, parseHookExpression(expression));
+    });
+}
+
+function collectHookTable(tbodyId) {
+    var hooks = [];
+    document.querySelectorAll('#' + tbodyId + ' tr').forEach(function(row) {
+        var preview = row.querySelector('.hook-preview').value.trim();
+        if (preview) {
+            hooks.push(preview);
+        }
+    });
+    return JSON.stringify(hooks);
+}
+
+function loadHookFunctions(projectId, callback) {
+    if (!projectId) {
+        hookFunctionOptions = [];
+        initHookTable('request-hooks-tbody', initRequestHooks);
+        initHookTable('response-hooks-tbody', initResponseHooks);
+        if (callback) { callback(); }
+        return;
+    }
+    $.get('{% url "hook_function_options" %}', {project_id: projectId}, function(data) {
+        hookFunctionOptions = Array.isArray(data) ? data : [];
+        initHookTable('request-hooks-tbody', initRequestHooks);
+        initHookTable('response-hooks-tbody', initResponseHooks);
+        if (callback) { callback(); }
+    });
 }
 document.getElementById('config-form').addEventListener('submit', function() {
     document.getElementById('variables').value = collectKvTable('variables-table');
     document.getElementById('parameters').value = collectKvTable('parameters-table');
-    var rhEdit = document.getElementById('request_hooks_edit');
-    var resHEdit = document.getElementById('response_hooks_edit');
-    try { JSON.parse(rhEdit.value); document.getElementById('request_hooks').value = rhEdit.value; } catch(e) { document.getElementById('request_hooks').value = '{}'; }
-    try { JSON.parse(resHEdit.value); document.getElementById('response_hooks').value = resHEdit.value; } catch(e) { document.getElementById('response_hooks').value = '{}'; }
+    document.getElementById('request_hooks').value = collectHookTable('request-hooks-tbody');
+    document.getElementById('response_hooks').value = collectHookTable('response-hooks-tbody');
 });
 $(document).ready(function() {
     initKvTable('variables-table', initVariables);
     initKvTable('parameters-table', initParameters);
+    loadHookFunctions($('#project-select').val());
     $('#project-select').change(function() {
         var projectId = $(this).val();
         var moduleSelect = $('#module');
         moduleSelect.empty().append('<option value="">请选择模块</option>');
+        loadHookFunctions(projectId);
         if (projectId) {
             $.get('{% url "load_modules" %}', {project_id: projectId}, function(data) {
                 data.forEach(function(m) { moduleSelect.append('<option value="' + m.id + '">' + m.name + '</option>'); });

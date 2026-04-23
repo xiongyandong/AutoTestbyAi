@@ -18,7 +18,7 @@ def ddt_list(request):
         sources = sources.filter(source_type=source_type)
     if search:
         sources = sources.filter(name__icontains=search)
-    paginator = Paginator(sources, 15)
+    paginator = Paginator(sources, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     return render(request, 'ddt/list.html', {

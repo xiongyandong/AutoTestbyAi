@@ -47,7 +47,7 @@ def report_list(request):
         avg_duration=Avg('duration'),
     )
 
-    paginator = Paginator(results, 15)
+    paginator = Paginator(results, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 

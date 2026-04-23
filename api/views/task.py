@@ -22,7 +22,7 @@ def task_list(request):
         tasks = tasks.filter(status=status_filter)
     if type_filter:
         tasks = tasks.filter(task_type=type_filter)
-    paginator = Paginator(tasks, 15)
+    paginator = Paginator(tasks, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     return render(request, 'task/list.html', {

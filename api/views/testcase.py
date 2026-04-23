@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from ..models import TestCase, Module, Project, DDTSource
+from ..script_engine import normalize_hook_list
 
 
 def _get_filter_context(request):
@@ -40,7 +41,7 @@ def testcase_list(request):
     if ctx['search']:
         testcases = testcases.filter(name__icontains=ctx['search'])
 
-    paginator = Paginator(testcases, 15)
+    paginator = Paginator(testcases, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     ctx.update({
@@ -124,8 +125,8 @@ def _validate_and_save(testcase, request, is_create=False):
     testcase.body = parsed['body']
     testcase.extractors = parsed['extractors']
     testcase.assertions = parsed['assertions']
-    testcase.setup_hooks = parsed['setup_hooks']
-    testcase.teardown_hooks = parsed['teardown_hooks']
+    testcase.setup_hooks = normalize_hook_list(parsed['setup_hooks'])
+    testcase.teardown_hooks = normalize_hook_list(parsed['teardown_hooks'])
     testcase.save()
     return True, form_data
 
@@ -138,7 +139,15 @@ def testcase_create(request):
     projects = Project.objects.all()
     modules = Module.objects.select_related('project').all()
     ddt_sources = DDTSource.objects.all()
-    ctx = {'projects': projects, 'modules': modules, 'method_choices': METHOD_CHOICES, 'ddt_sources': ddt_sources, 'nav_testcase': 'active'}
+    ctx = {
+        'projects': projects,
+        'modules': modules,
+        'method_choices': METHOD_CHOICES,
+        'ddt_sources': ddt_sources,
+        'nav_testcase': 'active',
+        'testcase_setup_hooks_json': '[]',
+        'testcase_teardown_hooks_json': '[]',
+    }
 
     if request.method == 'POST':
         tc = TestCase()
@@ -158,7 +167,20 @@ def testcase_update(request, pk):
     projects = Project.objects.all()
     modules = Module.objects.select_related('project').all()
     ddt_sources = DDTSource.objects.all()
-    ctx = {'testcase': testcase, 'projects': projects, 'modules': modules, 'method_choices': METHOD_CHOICES, 'ddt_sources': ddt_sources, 'nav_testcase': 'active'}
+    body_json = json.dumps(testcase.body, ensure_ascii=False)
+    # Escape only &amp; and < so the string is safe inside a <textarea> while preserving "
+    body_json_safe = body_json.replace('&', '&amp;').replace('<', '&lt;')
+    ctx = {
+        'testcase': testcase,
+        'projects': projects,
+        'modules': modules,
+        'method_choices': METHOD_CHOICES,
+        'ddt_sources': ddt_sources,
+        'nav_testcase': 'active',
+        'testcase_body_json': body_json_safe,
+        'testcase_setup_hooks_json': json.dumps(normalize_hook_list(testcase.setup_hooks), ensure_ascii=False),
+        'testcase_teardown_hooks_json': json.dumps(normalize_hook_list(testcase.teardown_hooks), ensure_ascii=False),
+    }
 
     if request.method == 'POST':
         success, form_data = _validate_and_save(testcase, request)

@@ -12,8 +12,8 @@
     <section class="list-hero">
         <div class="list-hero-copy">
             <p class="command-eyebrow">DDT Workspace</p>
-            <h4>列表总览</h4>
-            <p>查看数据源类型、描述和关联用例，统一成数据工作台风格。</p>
+            <h4>数据源</h4>
+            <p>查看数据源类型、描述和关联用例。</p>
         </div>
         <div class="list-hero-actions">
             <a href="{% url 'ddt_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>新增数据源</a>
@@ -22,7 +22,7 @@
 
     <section class="filter-bar list-filter-bar">
         <div class="list-filter-head">
-            <span class="command-card-kicker">筛选条件</span>
+            <span class="command-card-kicker">筛选</span>
             <strong>类型与关键字</strong>
         </div>
         <form method="get" class="list-filter-form list-filter-form-wide">
@@ -34,7 +34,7 @@
                 <option value="DB" {% if current_type == 'DB' %}selected{% endif %}>数据库</option>
             </select>
             <input type="text" name="search" class="form-control" placeholder="搜索..." value="{{ search }}">
-            <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+            <button type="submit" class="btn btn-outline-secondary compact-search-btn"><i class="bi bi-search"></i></button>
         </form>
     </section>
 

@@ -13,8 +13,8 @@
     <section class="list-hero">
         <div class="list-hero-copy">
             <p class="command-eyebrow">Environment Workspace</p>
-            <h4>列表总览</h4>
-            <p>查看环境地址、模块归属和环境类型，统一成轻量工作台式列表。</p>
+            <h4>环境管理</h4>
+            <p>查看环境地址、归属模块和环境类型。</p>
         </div>
         <div class="list-hero-actions">
             <a href="{% url 'config_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>新增环境</a>
@@ -23,7 +23,7 @@
 
     <section class="filter-bar list-filter-bar">
         <div class="list-filter-head">
-            <span class="command-card-kicker">筛选条件</span>
+            <span class="command-card-kicker">筛选</span>
             <strong>项目与模块</strong>
         </div>
         <form method="get" class="list-filter-form list-filter-form-wide">
@@ -39,7 +39,7 @@
                 <option value="{{ m.pk }}" {% if current_module == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+            <button type="submit" class="btn btn-outline-secondary compact-search-btn"><i class="bi bi-search"></i></button>
         </form>
     </section>
 

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
-from ..models import Project, ProjectConfig
+from ..models import Project, ProjectConfig, ScriptAsset
 
 
 def project_list(request):
@@ -11,7 +11,7 @@ def project_list(request):
     if search:
         projects = projects.filter(name__icontains=search)
     projects = projects.prefetch_related('modules')
-    paginator = Paginator(projects, 15)
+    paginator = Paginator(projects, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     return render(request, 'project/list.html', {
@@ -42,7 +42,17 @@ def project_create(request):
                 'form_data': request.POST,
             })
 
-        Project.objects.create(name=name, description=description, created_by=created_by)
+        project = Project.objects.create(name=name, description=description, created_by=created_by)
+        ScriptAsset.objects.get_or_create(
+            scope_type=ScriptAsset.SCOPE_PROJECT,
+            project=project,
+            defaults={
+                'name': f'{project.name}脚本配置',
+                'language': 'python',
+                'content': '',
+                'function_index': [],
+            },
+        )
         messages.success(request, f'项目 "{name}" 创建成功')
         return redirect('project_list')
 

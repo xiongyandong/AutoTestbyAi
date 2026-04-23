@@ -1,6 +1,7 @@
 """Task helper utilities shared between views and Celery tasks."""
 import json
 from .models import TestCase, Config, ProjectConfig
+from .script_engine import normalize_hook_list
 
 
 def _ensure_dict(value):
@@ -67,4 +68,6 @@ def load_env_config(task):
         'variables': env_vars,
         'parameters': parameters,
         'base_url': base_url,
+        'request_hooks': normalize_hook_list(config.request_hooks) if config else [],
+        'response_hooks': normalize_hook_list(config.response_hooks) if config else [],
     }

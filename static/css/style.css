@@ -1651,67 +1651,90 @@ a:hover { color: #2563eb; }
 .list-dashboard,
 .form-dashboard {
     display: grid;
-    gap: 1rem;
+    gap: .7rem;
 }
 
 .list-hero,
 .form-hero {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: .6rem;
     flex-wrap: wrap;
 }
 
 .list-hero-copy h4,
 .form-hero-copy h4 {
     margin: 0;
-    font-size: 2rem;
-    line-height: 1.05;
+    font-size: 1.35rem;
+    line-height: 1.1;
     color: var(--text-primary);
 }
 
 .list-hero-copy p:last-child,
 .form-hero-copy p:last-child {
-    margin: .75rem 0 0;
+    margin: .35rem 0 0;
     color: var(--text-secondary);
-    max-width: 54ch;
-    line-height: 1.7;
+    max-width: 46rem;
+    line-height: 1.45;
+    font-size: .82rem;
 }
 
 .list-hero-actions {
     display: flex;
-    gap: .75rem;
+    gap: .55rem;
     flex-wrap: wrap;
 }
 
 .list-hero-actions .btn {
     border-radius: 999px;
+    padding: .48rem .85rem;
 }
 
 .list-filter-bar {
     display: grid;
-    gap: .9rem;
+    gap: .5rem;
+    padding: .7rem .85rem;
 }
 
 .list-filter-head strong {
     display: block;
-    margin-top: .2rem;
-    font-size: 1rem;
+    margin-top: .1rem;
+    font-size: .92rem;
 }
 
 .list-filter-form {
     display: grid;
     grid-template-columns: minmax(220px, 1fr) auto;
-    gap: .75rem;
+    gap: .55rem;
 }
 
 .list-filter-form-wide {
     grid-template-columns: repeat(4, minmax(140px, 1fr)) auto auto;
 }
 
+.compact-search-btn {
+    padding: 12px;
+    min-width: 44px;
+    line-height: 1;
+    justify-self: start;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compact-search-btn i {
+    font-size: .95rem;
+}
+
+.task-filter-form {
+    grid-template-columns: repeat(2, minmax(160px, 1fr)) auto;
+    align-items: center;
+}
+
 .worktable-card .card-body {
-    padding: .5rem;
+    padding: .4rem;
 }
 
 .worktable-card .table {
@@ -1722,14 +1745,15 @@ a:hover { color: #2563eb; }
 .worktable-card .table thead th {
     background: rgba(248,250,252,.95);
     border-top: none;
+    padding: .5rem .7rem;
 }
 
 .worktable-card .table tbody td {
-    padding-block: .75rem;
+    padding-block: .58rem;
 }
 
 .form-shell-card .card-body {
-    padding: 1.25rem 1.35rem;
+    padding: 1rem 1.1rem;
 }
 
 .form-nav-tabs {
@@ -1742,7 +1766,7 @@ a:hover { color: #2563eb; }
     border-radius: 999px;
     background: rgba(248,250,252,.92);
     border: 1px solid rgba(148,163,184,.14);
-    padding-inline: .95rem;
+    padding: .4rem .78rem;
 }
 
 .form-nav-tabs .nav-link.active {
@@ -1754,9 +1778,18 @@ a:hover { color: #2563eb; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: .75rem;
     flex-wrap: wrap;
-    padding: 1rem 1.35rem;
+    padding: .85rem 1.1rem;
+}
+
+.form-dashboard .mb-3,
+.list-dashboard .mb-3 {
+    margin-bottom: .85rem !important;
+}
+
+.form-dashboard .form-label {
+    margin-bottom: .22rem;
 }
 
 .form-footer-copy strong {
@@ -1774,6 +1807,82 @@ a:hover { color: #2563eb; }
 @media (max-width: 991.98px) {
     .list-filter-form,
     .list-filter-form-wide {
+        grid-template-columns: 1fr;
+    }
+
+    .task-filter-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Script Management --- */
+.script-public-row {
+    background: rgba(15, 23, 42, .04);
+}
+
+.script-editor-card .card-body {
+    padding: 1.25rem 1.35rem;
+}
+
+.script-editor-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(260px, .55fr);
+    gap: 1rem;
+}
+
+.script-editor-main,
+.script-editor-side {
+    min-width: 0;
+}
+
+.script-editor-textarea {
+    min-height: 520px;
+}
+
+.script-editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+.script-side-card {
+    height: 100%;
+    padding: 1rem 1.05rem;
+    border-radius: 1rem;
+    background: linear-gradient(180deg, #111827, #1f2937);
+    color: #e5e7eb;
+}
+
+.script-side-card strong {
+    display: block;
+    margin-top: .2rem;
+    margin-bottom: .9rem;
+}
+
+.script-function-list {
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.script-function-list li {
+    margin-bottom: .55rem;
+}
+
+.script-function-list code {
+    color: #c4f1f9;
+}
+
+.CodeMirror {
+    height: 520px;
+    border-radius: 1rem;
+    border: 1px solid rgba(148,163,184,.16);
+    font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+}
+
+@media (max-width: 991.98px) {
+    .script-editor-layout {
         grid-template-columns: 1fr;
     }
 }

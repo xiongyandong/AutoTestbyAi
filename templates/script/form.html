@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}脚本编辑 - Pytest 测试平台{% endblock %}
+{% block nav_script %}active{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'script_list' %}">脚本管理</a></li>
+<li class="breadcrumb-item active">编辑脚本</li>
+{% endblock %}
+
+{% block content %}
+<div class="form-dashboard script-editor-dashboard">
+    <section class="form-hero">
+        <div class="form-hero-copy">
+            <p class="command-eyebrow">Python Script Editor</p>
+            <h4>编辑脚本</h4>
+            <p>维护公共脚本和项目脚本，保存前执行 Python 语法校验。</p>
+        </div>
+    </section>
+
+    <section class="card form-shell-card script-editor-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">函数预览</span>
+                <strong>{{ script.name }}</strong>
+            </div>
+            <div class="script-meta-badges">
+                <span class="badge text-bg-dark">{{ script.get_scope_type_display }}</span>
+                {% if script.project %}<span class="badge text-bg-secondary">{{ script.project.name }}</span>{% endif %}
+            </div>
+        </div>
+        <form method="post" id="script-form">
+            {% csrf_token %}
+            <div class="card-body">
+                <div class="script-editor-layout">
+                    <div class="script-editor-main">
+                        <label class="form-label">Python 脚本</label>
+                        <textarea id="script-content" name="content" class="form-control script-editor-textarea" rows="22">{{ editor_content }}</textarea>
+                        <div class="script-editor-toolbar mt-3">
+                            <button type="button" class="btn btn-outline-secondary" id="validate-script-btn"><i class="bi bi-check-circle me-1"></i>校验语法</button>
+                            <span class="text-muted small" id="script-validation-message">当前仅支持 Python 顶层函数。</span>
+                        </div>
+                    </div>
+                    <aside class="script-editor-side">
+                        <div class="script-side-card">
+                            <span class="command-card-kicker">函数预览</span>
+                            <strong>可调用函数</strong>
+                            <ul class="script-function-list">
+                                {% for function_name in script.function_index %}
+                                <li><code>{{ function_name }}</code></li>
+                                {% empty %}
+                                <li class="text-muted">暂无函数</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+            <div class="card-footer form-shell-footer">
+                <div class="form-footer-copy">
+                    <span class="command-card-kicker">CodeMirror</span>
+                    <strong>保存后会刷新函数索引</strong>
+                </div>
+                <div class="form-footer-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>保存</button>
+                    <a href="{% url 'script_list' %}" class="btn btn-secondary"><i class="bi bi-x-lg me-1"></i>返回</a>
+                </div>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/material-darker.css">
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/python/python.js"></script>
+<script>
+const codeEditor = CodeMirror.fromTextArea(document.getElementById('script-content'), {
+    mode: 'python',
+    theme: 'material-darker',
+    lineNumbers: true,
+    indentUnit: 4,
+    lineWrapping: false,
+    matchBrackets: true
+});
+
+document.getElementById('validate-script-btn').addEventListener('click', function() {
+    fetch('{% url "script_validate" script.pk %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: new URLSearchParams({content: codeEditor.getValue()})
+    }).then(async function(response) {
+        const payload = await response.json();
+        const target = document.getElementById('script-validation-message');
+        if (payload.ok) {
+            target.textContent = '语法检查通过';
+            target.classList.remove('text-danger');
+            target.classList.add('text-success');
+        } else {
+            target.textContent = '第 ' + payload.line + ' 行：' + payload.message;
+            target.classList.remove('text-success');
+            target.classList.add('text-danger');
+        }
+    });
+});
+
+document.getElementById('script-form').addEventListener('submit', function() {
+    document.getElementById('script-content').value = codeEditor.getValue();
+});
+</script>
+{% endblock %}

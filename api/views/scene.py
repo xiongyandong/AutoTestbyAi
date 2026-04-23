@@ -17,7 +17,7 @@ def scene_list(request):
     if search:
         scenes = scenes.filter(name__icontains=search)
     projects = Project.objects.all()
-    paginator = Paginator(scenes, 15)
+    paginator = Paginator(scenes, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     return render(request, 'scene/list.html', {

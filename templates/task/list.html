@@ -12,8 +12,8 @@
     <section class="list-hero">
         <div class="list-hero-copy">
             <p class="command-eyebrow">Task Workspace</p>
-            <h4>列表总览</h4>
-            <p>集中查看任务状态、类型、执行结果与调度信息，保持统一的工作台视图。</p>
+            <h4>执行与调度</h4>
+            <p>查看任务状态、执行方式和最近结果。</p>
         </div>
         <div class="list-hero-actions">
             <a href="{% url 'task_create' %}" class="btn btn-primary">
@@ -24,10 +24,10 @@
 
     <section class="filter-bar list-filter-bar">
         <div class="list-filter-head">
-            <span class="command-card-kicker">筛选条件</span>
+            <span class="command-card-kicker">筛选</span>
             <strong>状态与类型</strong>
         </div>
-        <form method="get" class="list-filter-form">
+        <form method="get" class="list-filter-form task-filter-form">
             <select name="status" class="form-select">
                 <option value="">全部状态</option>
                 <option value="PENDING" {% if current_status == 'PENDING' %}selected{% endif %}>待执行</option>
@@ -41,7 +41,7 @@
                 <option value="ASYNC" {% if current_type == 'ASYNC' %}selected{% endif %}>异步执行</option>
                 <option value="SCHEDULE" {% if current_type == 'SCHEDULE' %}selected{% endif %}>定时任务</option>
             </select>
-            <button type="submit" class="btn btn-outline-secondary">
+            <button type="submit" class="btn btn-outline-secondary compact-search-btn">
                 <i class="bi bi-search"></i>
             </button>
         </form>

@@ -10,6 +10,7 @@ from .views import ddt as ddt_views
 from .views import scene as scene_views
 from .views import task as task_views
 from .views import report as report_views
+from .views import script as script_views
 
 urlpatterns = [
     path('login/', auth_views.login_view, name='login'),
@@ -80,4 +81,10 @@ urlpatterns = [
     path('reports/', login_required(report_views.report_list), name='report_list'),
     path('reports/<int:pk>/', login_required(report_views.report_detail), name='report_detail'),
     path('reports/<int:pk>/download/', login_required(report_views.report_download), name='report_download'),
+
+    # 脚本管理
+    path('scripts/', login_required(script_views.script_list), name='script_list'),
+    path('scripts/functions/', login_required(script_views.hook_function_options), name='hook_function_options'),
+    path('scripts/<int:pk>/edit/', login_required(script_views.script_update), name='script_update'),
+    path('scripts/<int:pk>/validate/', login_required(script_views.script_validate), name='script_validate'),
 ]

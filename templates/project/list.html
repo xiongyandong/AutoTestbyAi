@@ -12,8 +12,8 @@
     <section class="list-hero">
         <div class="list-hero-copy">
             <p class="command-eyebrow">Project Workspace</p>
-            <h4>列表总览</h4>
-            <p>集中查看项目基础信息、模块规模和更新时间，保持与首页一致的轻工作台风格。</p>
+            <h4>项目管理</h4>
+            <p>查看项目基础信息、模块规模和更新时间。</p>
         </div>
         <div class="list-hero-actions">
             <a href="{% url 'project_create' %}" class="btn btn-primary">
@@ -24,8 +24,8 @@
 
     <section class="filter-bar list-filter-bar">
         <div class="list-filter-head">
-            <span class="command-card-kicker">筛选条件</span>
-            <strong>快速缩小范围</strong>
+            <span class="command-card-kicker">筛选</span>
+            <strong>项目检索</strong>
         </div>
         <form method="get" class="list-filter-form">
             <input type="text" name="search" class="form-control" placeholder="搜索项目..." value="{{ search }}">

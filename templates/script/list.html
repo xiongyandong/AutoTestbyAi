@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}脚本管理 - Pytest 测试平台{% endblock %}
+{% block nav_script %}active{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">脚本管理</li>
+{% endblock %}
+
+{% block content %}
+<div class="list-dashboard script-dashboard">
+    <section class="list-hero">
+        <div class="list-hero-copy">
+            <p class="command-eyebrow">Script Workspace</p>
+            <h4>脚本管理</h4>
+            <p>统一维护公共脚本和项目脚本，支持函数索引、项目筛选和分页浏览。</p>
+        </div>
+    </section>
+
+    <section class="filter-bar list-filter-bar">
+        <div class="list-filter-head">
+            <span class="command-card-kicker">筛选</span>
+            <strong>项目范围</strong>
+        </div>
+        <form method="get" class="list-filter-form">
+            <select name="project" class="form-select">
+                <option value="">全部项目</option>
+                <option value="PUBLIC" {% if current_project == 'PUBLIC' %}selected{% endif %}>公共脚本</option>
+                {% for project in projects %}
+                <option value="{{ project.pk }}" {% if current_project == project.pk|stringformat:"s" %}selected{% endif %}>{{ project.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+        </form>
+    </section>
+
+    <section class="card worktable-card">
+        <div class="card-header command-card-header">
+            <div><span class="command-card-kicker">数据列表</span><strong>脚本资产</strong></div>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="26%">脚本名称</th>
+                        <th width="12%">归属类型</th>
+                        <th width="18%">所属项目</th>
+                        <th width="12%">函数数</th>
+                        <th width="15%">更新时间</th>
+                        <th width="12%">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for script in page_obj.object_list %}
+                    <tr class="{% if script.scope_type == 'PUBLIC' %}script-public-row{% endif %}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <strong>{{ script.name }}</strong>
+                            {% if script.scope_type == 'PUBLIC' %}
+                            <span class="badge text-bg-dark ms-2">固定</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ script.get_scope_type_display }}</td>
+                        <td>{% if script.project %}{{ script.project.name }}{% else %}<span class="text-muted">公共</span>{% endif %}</td>
+                        <td>{{ script.function_index|length }}</td>
+                        <td>{{ script.updated_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <a href="{% url 'script_update' script.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="bi bi-filetype-py"></i>
+                                <p>暂无脚本资产</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
