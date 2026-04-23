@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
-from ..models import Project
+from ..models import Project, ProjectConfig
 
 
 def project_list(request):
@@ -98,3 +98,67 @@ def project_delete(request, pk):
         return redirect('project_list')
 
     return render(request, 'project/list.html', {'nav_project': 'active'})
+
+
+def project_config_list(request, pk):
+    """项目配置管理列表"""
+    project = get_object_or_404(Project, pk=pk)
+    configs = ProjectConfig.objects.filter(project=project)
+    return render(request, 'project/config.html', {
+        'project': project,
+        'configs': configs,
+        'nav_project': 'active',
+    })
+
+
+def project_config_create(request, pk):
+    """新增项目配置变量"""
+    project = get_object_or_404(Project, pk=pk)
+    if request.method == 'POST':
+        key = request.POST.get('key', '').strip()
+        value = request.POST.get('value', '').strip()
+        description = request.POST.get('description', '').strip()
+        if not key:
+            messages.error(request, '变量名不能为空')
+            return redirect('project_config_list', pk=pk)
+        if ProjectConfig.objects.filter(project=project, key=key).exists():
+            messages.error(request, f'变量名 "{key}" 已存在')
+            return redirect('project_config_list', pk=pk)
+        ProjectConfig.objects.create(
+            project=project, key=key, value=value, description=description
+        )
+        messages.success(request, f'变量 "{key}" 创建成功')
+    return redirect('project_config_list', pk=pk)
+
+
+def project_config_update(request, pk, cid):
+    """修改项目配置变量"""
+    project = get_object_or_404(Project, pk=pk)
+    config = get_object_or_404(ProjectConfig, pk=cid, project=project)
+    if request.method == 'POST':
+        key = request.POST.get('key', '').strip()
+        value = request.POST.get('value', '').strip()
+        description = request.POST.get('description', '').strip()
+        if not key:
+            messages.error(request, '变量名不能为空')
+            return redirect('project_config_list', pk=pk)
+        if ProjectConfig.objects.filter(project=project, key=key).exclude(pk=cid).exists():
+            messages.error(request, f'变量名 "{key}" 已存在')
+            return redirect('project_config_list', pk=pk)
+        config.key = key
+        config.value = value
+        config.description = description
+        config.save()
+        messages.success(request, f'变量 "{key}" 更新成功')
+    return redirect('project_config_list', pk=pk)
+
+
+def project_config_delete(request, pk, cid):
+    """删除项目配置变量"""
+    project = get_object_or_404(Project, pk=pk)
+    config = get_object_or_404(ProjectConfig, pk=cid, project=project)
+    if request.method == 'POST':
+        key = config.key
+        config.delete()
+        messages.success(request, f'变量 "{key}" 已删除')
+    return redirect('project_config_list', pk=pk)

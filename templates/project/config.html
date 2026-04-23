@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - 配置管理 - Pytest 测试平台{% endblock %}
+{% block nav_project %}active{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'project_list' %}">项目管理</a></li>
+<li class="breadcrumb-item active">{{ project.name }} 配置管理</li>
+{% endblock %}
+
+{% block content %}
+<div class="list-dashboard">
+    <section class="list-hero">
+        <div class="list-hero-copy">
+            <p class="command-eyebrow">Project Config</p>
+            <h4>{{ project.name }} · 配置管理</h4>
+            <p>管理该项目的全局变量，使用 <code>${变量名}</code> 在用例中引用。优先级低于环境变量。</p>
+        </div>
+        <div class="list-hero-actions">
+            <button type="button" class="btn btn-primary" id="addRowBtn" onclick="addNewRow()">
+                <i class="bi bi-plus-lg me-1"></i>新增变量
+            </button>
+        </div>
+    </section>
+
+    <section class="card worktable-card">
+        <div class="card-header command-card-header">
+            <div>
+                <span class="command-card-kicker">数据列表</span>
+                <strong>项目变量</strong>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-striped mb-0" id="configTable">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="20%">变量名</th>
+                        <th width="30%">变量值</th>
+                        <th width="25%">备注</th>
+                        <th width="10%">更新时间</th>
+                        <th width="10%">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="configTbody">
+                    {% for cfg in configs %}
+                    <tr id="row-{{ cfg.pk }}" data-mode="view">
+                        <td class="cell-index">{{ forloop.counter }}</td>
+                        <td class="cell-key"><code>{{ cfg.key }}</code></td>
+                        <td class="cell-value text-truncate" style="max-width:240px" title="{{ cfg.value }}">{{ cfg.value|default:"-" }}</td>
+                        <td class="cell-desc">{{ cfg.description|default:"-"|truncatechars:40 }}</td>
+                        <td class="cell-time">{{ cfg.updated_at|date:"Y-m-d H:i" }}</td>
+                        <td class="align-middle">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary" title="编辑"
+                                        onclick="startEdit({{ cfg.pk }}, '{{ cfg.key|escapejs }}', '{{ cfg.value|escapejs }}', '{{ cfg.description|escapejs }}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="删除"
+                                        onclick="confirmDelete('{% url 'project_config_delete' project.pk cfg.pk %}', '{{ cfg.key|escapejs }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr id="emptyRow">
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="bi bi-sliders"></i>
+                                <p>暂无项目变量</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- 编辑变量 Modal -->
+<div class="modal fade" id="editConfigModal" tabindex="-1" aria-labelledby="editConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="editConfigForm" action="">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editConfigModalLabel">编辑项目变量</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">变量名 <span class="text-danger">*</span></label>
+                        <input type="text" name="key" id="editKey" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">变量值</label>
+                        <input type="text" name="value" id="editValue" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">备注</label>
+                        <input type="text" name="description" id="editDescription" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var addRowActive = false;
+
+function addNewRow() {
+    if (addRowActive) {
+        document.getElementById('newRow').querySelector('input[name="key"]').focus();
+        return;
+    }
+    addRowActive = true;
+
+    // 移除空状态行
+    var emptyRow = document.getElementById('emptyRow');
+    if (emptyRow) emptyRow.remove();
+
+    var tbody = document.getElementById('configTbody');
+    var rowCount = tbody.querySelectorAll('tr[id^="row-"]').length + 1;
+
+    var tr = document.createElement('tr');
+    tr.id = 'newRow';
+    tr.style.background = '#f0f7ff';
+    tr.innerHTML =
+        '<td>' + rowCount + '</td>' +
+        '<td><input type="text" name="key" class="form-control form-control-sm" placeholder="变量名" required autofocus></td>' +
+        '<td><input type="text" name="value" class="form-control form-control-sm" placeholder="变量值"></td>' +
+        '<td><input type="text" name="description" class="form-control form-control-sm" placeholder="备注"></td>' +
+        '<td>-</td>' +
+        '<td class="align-middle">' +
+            '<div class="btn-group">' +
+                '<button type="button" class="btn btn-sm btn-success" onclick="saveNewRow()" title="保存"><i class="bi bi-check-lg"></i></button>' +
+                '<button type="button" class="btn btn-sm btn-secondary" onclick="cancelNewRow()" title="取消"><i class="bi bi-x-lg"></i></button>' +
+            '</div>' +
+        '</td>';
+    tbody.appendChild(tr);
+    tr.querySelector('input[name="key"]').focus();
+}
+
+function saveNewRow() {
+    var tr = document.getElementById('newRow');
+    var key = tr.querySelector('input[name="key"]').value.trim();
+    var value = tr.querySelector('input[name="value"]').value.trim();
+    var description = tr.querySelector('input[name="description"]').value.trim();
+
+    if (!key) {
+        tr.querySelector('input[name="key"]').focus();
+        tr.querySelector('input[name="key"]').classList.add('is-invalid');
+        return;
+    }
+
+    var form = document.createElement('form');
+    form.method = 'post';
+    form.action = '{% url "project_config_create" project.pk %}';
+    form.innerHTML =
+        '<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">' +
+        '<input type="hidden" name="key" value="' + escapeHtml(key) + '">' +
+        '<input type="hidden" name="value" value="' + escapeHtml(value) + '">' +
+        '<input type="hidden" name="description" value="' + escapeHtml(description) + '">';
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function cancelNewRow() {
+    var tr = document.getElementById('newRow');
+    if (tr) tr.remove();
+    addRowActive = false;
+
+    // 如果没有数据行了，恢复空状态
+    var tbody = document.getElementById('configTbody');
+    if (tbody.querySelectorAll('tr[id^="row-"]').length === 0) {
+        var emptyTr = document.createElement('tr');
+        emptyTr.id = 'emptyRow';
+        emptyTr.innerHTML = '<td colspan="6"><div class="empty-state"><i class="bi bi-sliders"></i><p>暂无项目变量</p></div></td>';
+        tbody.appendChild(emptyTr);
+    }
+}
+
+function startEdit(cid, key, value, description) {
+    document.getElementById('editKey').value = key;
+    document.getElementById('editValue').value = value;
+    document.getElementById('editDescription').value = description;
+    document.getElementById('editConfigForm').action = '/projects/{{ project.pk }}/project-configs/' + cid + '/update/';
+    new bootstrap.Modal(document.getElementById('editConfigModal')).show();
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+{% endblock %}

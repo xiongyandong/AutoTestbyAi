@@ -171,13 +171,18 @@ function initAuthRequiredValidation() {
         if (!requiredFields.length) return;
 
         requiredFields.forEach(function(input) {
+            // 记录页面初始渲染时是否已有服务端错误，避免初始化时清除它
+            var initialServerError = input.classList.contains('is-invalid');
             input.addEventListener('input', function() {
+                initialServerError = false;
                 toggleRequiredState(input, false);
             });
             input.addEventListener('blur', function() {
                 toggleRequiredState(input, false);
             });
-            toggleRequiredState(input, false);
+            if (!initialServerError) {
+                toggleRequiredState(input, false);
+            }
         });
 
         form.addEventListener('submit', function(e) {
@@ -261,6 +266,9 @@ function initPasswordConfirmValidation() {
     feedback.hidden = true;
     feedback.setAttribute('aria-hidden', 'true');
 
+    // 记录页面初始渲染时是否已有服务端错误（后端返回的 is-invalid）
+    const hasServerError = confirmInput.classList.contains('is-invalid');
+
     function updateConfirmState(forceShow) {
         const sourceValue = sourceInput.value || '';
         const confirmValue = confirmInput.value || '';
@@ -268,8 +276,11 @@ function initPasswordConfirmValidation() {
         const mismatch = hasConfirmValue && sourceValue !== confirmValue;
         const shouldShow = mismatch && (forceShow || hasConfirmValue);
 
-        confirmInput.classList.toggle('is-invalid', mismatch);
-        confirmInput.classList.toggle('is-valid', hasConfirmValue && !mismatch);
+        // 只有用户开始输入后才接管 is-invalid/is-valid 状态
+        if (hasConfirmValue || forceShow) {
+            confirmInput.classList.toggle('is-invalid', mismatch);
+            confirmInput.classList.toggle('is-valid', hasConfirmValue && !mismatch);
+        }
         feedback.classList.toggle('show', shouldShow);
         feedback.hidden = !shouldShow;
         feedback.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
@@ -295,16 +306,61 @@ function initPasswordConfirmValidation() {
     });
 
     if (form) {
-        form.addEventListener('submit', function(e) {
-            const isValid = updateConfirmState(true);
-            if (!isValid) {
-                e.preventDefault();
-                confirmInput.focus();
-            }
+        form.addEventListener('submit', function() {
+            updateConfirmState(true);
         });
     }
 
     updateConfirmState(false);
+}
+
+function initPasswordToggle() {
+    document.querySelectorAll('[data-password-toggle="true"]').forEach(function(input) {
+        // 用一个专用 wrapper 包裹 input，确保按钮 top:50% 相对 input 高度居中
+        var inputWrapper = document.createElement('div');
+        inputWrapper.style.cssText = 'position:relative;display:block;';
+        input.parentElement.insertBefore(inputWrapper, input);
+        inputWrapper.appendChild(input);
+        input.style.paddingRight = '2.5rem';
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-label', '切换密码可见性');
+        btn.style.cssText = [
+            'position:absolute',
+            'top:50%',
+            'right:10px',
+            'transform:translateY(-50%)',
+            'background:none',
+            'border:none',
+            'padding:0',
+            'cursor:pointer',
+            'color:#6c757d',
+            'line-height:1',
+            'z-index:5',
+        ].join(';');
+
+        var icon = document.createElement('i');
+        icon.className = 'bi bi-eye';
+        icon.style.fontSize = '1rem';
+        btn.appendChild(icon);
+
+        btn.addEventListener('mouseenter', function() { icon.style.color = '#343a40'; });
+        btn.addEventListener('mouseleave', function() { icon.style.color = '#6c757d'; });
+
+        btn.addEventListener('click', function() {
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+            input.focus();
+        });
+
+        inputWrapper.appendChild(btn);
+    });
 }
 
 // --- Auto-init on DOM ready ---
@@ -314,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initAuthRequiredValidation();
     initPasswordHints();
     initPasswordConfirmValidation();
+    initPasswordToggle();
 
     // Auto-format JSON fields on form submit
     document.querySelectorAll('form[data-json-format="true"]').forEach(function(form) {

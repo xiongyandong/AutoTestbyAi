@@ -1,6 +1,6 @@
 """Task helper utilities shared between views and Celery tasks."""
 import json
-from .models import TestCase, Config
+from .models import TestCase, Config, ProjectConfig
 
 
 def _ensure_dict(value):
@@ -44,16 +44,27 @@ def collect_scene_cases(task):
 
 
 def load_env_config(task):
-    """加载环境配置"""
+    """加载环境配置，包含项目级变量和环境级变量"""
     if not task.project:
         return None
+    # 项目级变量（最低优先级）
+    project_vars = dict(
+        ProjectConfig.objects.filter(project=task.project).values_list('key', 'value')
+    )
+    # 环境级变量
     config = Config.objects.filter(
         module__project=task.project, env_type=task.execute_env
     ).first()
+    env_vars = {}
+    parameters = {}
+    base_url = ''
     if config:
-        return {
-            'variables': _ensure_dict(config.variables),
-            'parameters': _ensure_dict(config.parameters),
-            'base_url': config.base_url or '',
-        }
-    return None
+        env_vars = _ensure_dict(config.variables)
+        parameters = _ensure_dict(config.parameters)
+        base_url = config.base_url or ''
+    return {
+        'project_variables': project_vars,
+        'variables': env_vars,
+        'parameters': parameters,
+        'base_url': base_url,
+    }

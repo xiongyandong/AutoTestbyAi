@@ -55,6 +55,7 @@
                 data-required-field="true"
                 data-password-input="true"
                 data-password-target="passwordRules"
+                data-password-toggle="true"
             >
             {% for error in form.password1.errors %}
                 <div class="invalid-feedback">{{ error }}</div>
@@ -79,13 +80,13 @@
                 data-required-field="true"
                 data-password-confirm="true"
                 data-password-source="{{ form.password1.id_for_label }}"
+                data-password-toggle="true"
             >
+            {% for error in form.password2.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
             <div id="passwordConfirmFeedback" class="password-confirm-feedback" hidden aria-hidden="true">
-                {% if form.password2.errors %}
-                    {{ form.password2.errors.0 }}
-                {% else %}
-                    两次输入的密码不一致
-                {% endif %}
+                两次输入的密码不一致
             </div>
             <div class="invalid-feedback required-feedback" hidden>请再次输入密码</div>
         </div>

@@ -59,10 +59,18 @@ def _validate_and_save(testcase, request, is_create=False):
     created_by = request.POST.get('created_by', '').strip()
     is_parameterized = request.POST.get('is_parameterized') == 'on'
 
+    body_type = request.POST.get('body_type', 'json')
+
     # JSON fields
     headers = request.POST.get('headers', '{}')
     params = request.POST.get('params', '{}')
-    body = request.POST.get('body', '{}')
+    if body_type == 'binary':
+        uploaded = request.FILES.get('body_file')
+        body = json.dumps({'__binary__': uploaded.name}) if uploaded else '{}'
+    elif body_type == 'none':
+        body = '{}'
+    else:
+        body = request.POST.get('body', '{}')
     extractors = request.POST.get('extractors', '{}')
     assertions = request.POST.get('assertions', '[]')
     setup_hooks = request.POST.get('setup_hooks', '[]')
@@ -72,6 +80,8 @@ def _validate_and_save(testcase, request, is_create=False):
 
     form_data = request.POST.copy()
     form_data['is_parameterized'] = is_parameterized
+    form_data['body_type'] = body_type
+    form_data['body_json_raw'] = request.POST.get('body', '{}')
 
     if not module_id or not name:
         messages.error(request, '模块和用例名称不能为空')
@@ -85,14 +95,18 @@ def _validate_and_save(testcase, request, is_create=False):
 
     # Validate JSON fields
     json_fields = {
-        'headers': headers, 'params': params, 'body': body,
-        'extractors': extractors, 'assertions': assertions,
-        'setup_hooks': setup_hooks, 'teardown_hooks': teardown_hooks,
+        'headers': (headers, {}),
+        'params': (params, {}),
+        'body': (body, {}),
+        'extractors': (extractors, {}),
+        'assertions': (assertions, []),
+        'setup_hooks': (setup_hooks, []),
+        'teardown_hooks': (teardown_hooks, []),
     }
     parsed = {}
-    for field_name, field_value in json_fields.items():
+    for field_name, (field_value, default) in json_fields.items():
         try:
-            parsed[field_name] = json.loads(field_value) if field_value else {}
+            parsed[field_name] = json.loads(field_value) if field_value.strip() else default
         except json.JSONDecodeError as e:
             messages.error(request, f'{field_name} JSON 格式错误: {e}')
             return False, form_data
@@ -101,6 +115,7 @@ def _validate_and_save(testcase, request, is_create=False):
     testcase.name = name
     testcase.method = method
     testcase.url = url
+    testcase.body_type = body_type
     testcase.created_by = created_by
     testcase.is_parameterized = is_parameterized
     testcase.ddt_source_id = ddt_source_id if ddt_source_id else None

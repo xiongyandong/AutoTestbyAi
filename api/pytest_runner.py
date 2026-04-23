@@ -36,6 +36,21 @@ def _ensure_list(value, default=None):
     return default or []
 
 
+def _replace_vars(value, variables):
+    """递归替换 dict/list/str 中的 ${key} 占位符"""
+    if not variables:
+        return value
+    if isinstance(value, str):
+        for k, v in variables.items():
+            value = value.replace(f'${{{k}}}', str(v))
+        return value
+    elif isinstance(value, dict):
+        return {k: _replace_vars(v, variables) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [_replace_vars(item, variables) for item in value]
+    return value
+
+
 class _ResultCollector:
     """pytest 插件：收集测试执行结果"""
 
@@ -96,17 +111,23 @@ class PytestRunner:
         setup_hooks = _ensure_list(testcase.setup_hooks)
         teardown_hooks = _ensure_list(testcase.teardown_hooks)
 
-        # 合并环境配置变量到 URL 中
-        if env_config and env_config.get('variables'):
-            variables = _ensure_dict(env_config['variables'])
-            for key, val in variables.items():
-                url = url.replace(f'${{{key}}}', str(val))
-            # 合并 headers
-            if env_config.get('parameters'):
-                parameters = _ensure_dict(env_config['parameters'])
-                env_headers = _ensure_dict(parameters.get('headers', {}))
-                merged = {**env_headers, **headers}
-                headers = merged
+        # 合并静态变量：项目变量（低优先级）被环境变量覆盖（高优先级）
+        merged_static_vars = {}
+        if env_config:
+            merged_static_vars.update(env_config.get('project_variables', {}))
+            merged_static_vars.update(_ensure_dict(env_config.get('variables', {})))
+
+        # 对 url、headers、params、body 全字段做静态变量替换
+        url = _replace_vars(url, merged_static_vars)
+        headers = _replace_vars(headers, merged_static_vars)
+        params = _replace_vars(params, merged_static_vars)
+        body = _replace_vars(body, merged_static_vars)
+
+        # 合并环境公共 headers
+        if env_config and env_config.get('parameters'):
+            parameters = _ensure_dict(env_config['parameters'])
+            env_headers = _ensure_dict(parameters.get('headers', {}))
+            headers = {**env_headers, **headers}
 
         # base_url 自动拼接：仅当 URL 不以 http:// 或 https:// 开头时
         if env_config and env_config.get('base_url'):
@@ -160,13 +181,31 @@ class PytestRunner:
         if shared_vars:
             lines.append('    _inject_shared_vars(shared_session_vars)')
 
-        # 替换 URL 中的提取变量引用
-        if extractors:
-            for var_name in extractors:
-                url = url.replace(f'${{{var_name}}}', f'" + str(globals().get("{var_name}", "")) + "')
+        # 提取变量运行时替换：作用于 headers、params、body（不替换 url）
+        # 在生成的 pytest 代码中，用 globals().get() 引用前序用例提取的变量
+        def _runtime_replace(obj, var_names):
+            """将 obj（dict/list/str）中的 ${var} 改写为运行时取值表达式"""
+            if isinstance(obj, str):
+                result = obj
+                for vn in var_names:
+                    result = result.replace(f'${{{vn}}}', f'" + str(globals().get("{vn}", "")) + "')
+                return result
+            elif isinstance(obj, dict):
+                return {k: _runtime_replace(v, var_names) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [_runtime_replace(item, var_names) for item in obj]
+            return obj
 
-        # 合并 DDT 参数到 body
-        if has_param:
+        if extractors:
+            var_names = list(extractors.keys())
+            headers = _runtime_replace(headers, var_names)
+            params = _runtime_replace(params, var_names)
+            body = _runtime_replace(body, var_names)
+
+        body_type = getattr(testcase, 'body_type', 'json') or 'json'
+
+        # 合并 DDT 参数到 body（仅 KV 类型支持 DDT 合并）
+        if has_param and body_type in ('json', 'form-data', 'x-www-form-urlencoded'):
             lines.append('    body_data = {**' + json.dumps(body, ensure_ascii=False) + ', **ddt_params}')
         else:
             lines.append('    body_data = ' + json.dumps(body, ensure_ascii=False))
@@ -179,8 +218,21 @@ class PytestRunner:
             f'        params={json.dumps(params, ensure_ascii=False)},',
         ])
 
-        if method in ('POST', 'PUT', 'PATCH') and body:
-            lines.append(f'        json=body_data,')
+        # 按 body_type 选择正确的 requests 参数
+        if method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            if body_type == 'json' and body:
+                lines.append(f'        json=body_data,')
+            elif body_type in ('form-data',) and body:
+                # multipart/form-data — requests 的 files= 或 data= 均可，data= 更通用
+                lines.append(f'        files={{k: (None, v) for k, v in body_data.items()}},')
+            elif body_type == 'x-www-form-urlencoded' and body:
+                lines.append(f'        data=body_data,')
+            elif body_type == 'binary':
+                # binary 文件路径存在 body["__binary__"]
+                bin_path = body.get('__binary__', '')
+                if bin_path:
+                    lines.append(f'        data=open({json.dumps(bin_path)}, "rb"),')
+            # none: 不传 body
         lines.append('        timeout=30,')
         lines.append('    )')
 

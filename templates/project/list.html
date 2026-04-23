@@ -66,6 +66,9 @@
                         <td>{{ project.updated_at|date:"Y-m-d H:i" }}</td>
                         <td class="actions">
                             <div class="btn-group">
+                                <a href="{% url 'project_config_list' project.pk %}" class="btn btn-sm btn-outline-secondary" title="配置管理">
+                                    <i class="bi bi-sliders"></i>
+                                </a>
                                 <a href="{% url 'project_update' project.pk %}" class="btn btn-sm btn-outline-primary" title="编辑">
                                     <i class="bi bi-pencil"></i>
                                 </a>

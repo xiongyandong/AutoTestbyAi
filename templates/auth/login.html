@@ -41,6 +41,7 @@
                 class="form-control{% if form.password.errors %} is-invalid{% endif %}"
                 placeholder="请输入密码"
                 data-required-field="true"
+                data-password-toggle="true"
             >
             {% for error in form.password.errors %}
                 <div class="invalid-feedback">{{ error }}</div>

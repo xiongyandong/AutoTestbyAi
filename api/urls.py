@@ -24,6 +24,10 @@ urlpatterns = [
     path('projects/create/', login_required(project_views.project_create), name='project_create'),
     path('projects/<int:pk>/update/', login_required(project_views.project_update), name='project_update'),
     path('projects/<int:pk>/delete/', login_required(project_views.project_delete), name='project_delete'),
+    path('projects/<int:pk>/project-configs/', login_required(project_views.project_config_list), name='project_config_list'),
+    path('projects/<int:pk>/project-configs/create/', login_required(project_views.project_config_create), name='project_config_create'),
+    path('projects/<int:pk>/project-configs/<int:cid>/update/', login_required(project_views.project_config_update), name='project_config_update'),
+    path('projects/<int:pk>/project-configs/<int:cid>/delete/', login_required(project_views.project_config_delete), name='project_config_delete'),
 
     # 模块管理
     path('modules/', login_required(module_views.module_list), name='module_list'),

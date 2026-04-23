@@ -17,6 +17,27 @@ class Project(models.Model):
         return self.name
 
 
+class ProjectConfig(models.Model):
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE,
+        verbose_name='所属项目', related_name='project_configs'
+    )
+    key = models.CharField('变量名', max_length=100)
+    value = models.CharField('变量值', max_length=500, blank=True, default='')
+    description = models.CharField('备注', max_length=200, blank=True, default='')
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        unique_together = [['project', 'key']]
+        ordering = ['project', 'key']
+        verbose_name = '项目配置'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f'{self.project.name} / {self.key}'
+
+
 class Module(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='所属项目', related_name='modules')
     name = models.CharField('模块名称', max_length=100)
@@ -96,11 +117,19 @@ class TestCase(models.Model):
         ('DELETE', 'DELETE'),
         ('PATCH', 'PATCH'),
     ]
+    BODY_TYPE_CHOICES = [
+        ('none', 'None'),
+        ('json', 'JSON'),
+        ('form-data', 'Form-Data'),
+        ('x-www-form-urlencoded', 'x-www-form-urlencoded'),
+        ('binary', 'Binary'),
+    ]
 
     module = models.ForeignKey(Module, on_delete=models.CASCADE, verbose_name='所属模块', related_name='testcases')
     name = models.CharField('用例名称', max_length=200)
     method = models.CharField('请求方法', max_length=10, choices=METHOD_CHOICES, default='GET')
     url = models.URLField('请求URL', max_length=500)
+    body_type = models.CharField('请求体类型', max_length=30, choices=BODY_TYPE_CHOICES, default='json')
     headers = models.JSONField('请求头', default=dict, blank=True)
     params = models.JSONField('请求参数', default=dict, blank=True)
     body = models.JSONField('请求体', default=dict, blank=True)
