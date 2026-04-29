@@ -11,3 +11,5 @@ start.bat
 stop.bat
 .superpowers
 AGENTS.md
+logs
+tmp_stitch_report_latest.png
